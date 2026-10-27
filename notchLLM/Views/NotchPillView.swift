@@ -1,49 +1,37 @@
 import SwiftUI
 
-/// Phase-2 notch pill: compact vertical dark capsule of usage rings.
-/// Hover expands horizontally and reveals a detail card with exact quota info.
+/// CodeNotch-style slim vertical edge pill with white icon cells and a left tooltip.
 struct NotchPillView: View {
     @Bindable var viewModel: NotchViewModel
     var onContentSizeChange: ((CGSize) -> Void)?
 
-    private let collapsedSize = CGSize(width: 44, height: 118)
-    private let expandedSize = CGSize(width: 248, height: 210)
+    /// Slim bar width hugging the screen edge.
+    private let barWidth: CGFloat = 52
+    private let cellHeight: CGFloat = 52
+    private let barVerticalPadding: CGFloat = 10
+    private let tooltipGap: CGFloat = 10
+    private let tooltipColumnWidth: CGFloat = 236
+
+    private var showsTooltip: Bool {
+        viewModel.isExpanded && viewModel.focusedProvider != nil
+    }
 
     var body: some View {
-        VStack(spacing: 0) {
-            pillBody
-                .padding(.top, 2)
+        HStack(alignment: .top, spacing: 0) {
+            if showsTooltip {
+                tooltipColumn
+                    .frame(width: tooltipColumnWidth, alignment: .trailing)
+                    .padding(.trailing, tooltipGap)
+                    .transition(.opacity)
+            }
 
-            if viewModel.isExpanded, let focused = focusedUsage {
-                UsageDetailCard(usage: focused)
-                    .padding(.horizontal, 8)
-                    .padding(.top, 8)
-                    .padding(.bottom, 8)
-                    .transition(
-                        .opacity
-                            .combined(with: .move(edge: .top))
-                            .combined(with: .scale(scale: 0.96, anchor: .top))
-                    )
-            }
+            barColumn
+                .frame(width: barWidth)
         }
-        .frame(
-            width: viewModel.isExpanded ? expandedSize.width : collapsedSize.width,
-            height: viewModel.isExpanded ? expandedSize.height : collapsedSize.height,
-            alignment: .top
-        )
-        .background { pillBackground }
-        .clipShape(RoundedRectangle(cornerRadius: viewModel.isExpanded ? 22 : 22, style: .continuous))
-        .shadow(color: .black.opacity(viewModel.isExpanded ? 0.35 : 0.22), radius: viewModel.isExpanded ? 14 : 8, y: 4)
-        .animation(.spring(response: 0.34, dampingFraction: 0.82), value: viewModel.isExpanded)
-        .animation(.easeInOut(duration: 0.2), value: viewModel.focusedProvider)
-        .onHover { hovering in
-            viewModel.setExpanded(hovering)
-            if hovering, viewModel.focusedProvider == nil {
-                viewModel.focus(viewModel.usages.first?.provider)
-            }
-            reportSize()
-        }
-        .onChange(of: viewModel.isExpanded) { _, _ in
+        .frame(width: panelSize.width, height: panelSize.height, alignment: .topTrailing)
+        .animation(.easeOut(duration: 0.14), value: showsTooltip)
+        .animation(.easeOut(duration: 0.14), value: viewModel.focusedProvider)
+        .onChange(of: panelSize) { _, _ in
             reportSize()
         }
         .onAppear {
@@ -54,92 +42,90 @@ struct NotchPillView: View {
         }
     }
 
-    // MARK: - Subviews
+    // MARK: - Columns
 
-    private var pillBody: some View {
-        Group {
-            if viewModel.isExpanded {
-                expandedRings
-            } else {
-                collapsedRings
-            }
-        }
-        .padding(.horizontal, viewModel.isExpanded ? 12 : 8)
-        .padding(.vertical, viewModel.isExpanded ? 10 : 10)
-    }
+    private var barColumn: some View {
+        VStack(spacing: 0) {
+            ForEach(Array(viewModel.usages.enumerated()), id: \.element.id) { index, usage in
+                cellButton(for: usage)
+                    .frame(height: cellHeight)
 
-    private var collapsedRings: some View {
-        VStack(spacing: 10) {
-            ForEach(viewModel.usages) { usage in
-                UsageRingCell(
-                    usage: usage,
-                    isFocused: false,
-                    showsPercent: false,
-                    ringSize: 26
-                )
-            }
-        }
-    }
-
-    private var expandedRings: some View {
-        HStack(spacing: 10) {
-            ForEach(viewModel.usages) { usage in
-                Button {
-                    viewModel.focus(usage.provider)
-                } label: {
-                    UsageRingCell(
-                        usage: usage,
-                        isFocused: viewModel.focusedProvider == usage.provider,
-                        showsPercent: true,
-                        ringSize: 30
-                    )
-                    .padding(.horizontal, 6)
-                    .padding(.vertical, 4)
-                    .background {
-                        if viewModel.focusedProvider == usage.provider {
-                            Capsule(style: .continuous)
-                                .fill(usage.provider.accent.opacity(0.14))
-                        }
-                    }
+                if index < viewModel.usages.count - 1 {
+                    Rectangle()
+                        .fill(Color.white.opacity(0.18))
+                        .frame(height: 0.5)
+                        .padding(.horizontal, 10)
                 }
-                .buttonStyle(.plain)
+            }
+        }
+        .padding(.vertical, barVerticalPadding)
+        .frame(width: barWidth)
+        .background {
+            Capsule(style: .continuous)
+                .fill(Color.black)
+        }
+        .compositingGroup()
+        .onHover { hovering in
+            viewModel.setExpanded(hovering)
+            if hovering, viewModel.focusedProvider == nil {
+                viewModel.focus(viewModel.usages.first?.provider)
+            }
+        }
+    }
+
+    private var tooltipColumn: some View {
+        ZStack(alignment: .trailing) {
+            // Absorb hover while the pointer moves onto the tooltip so it does not flicker away.
+            Color.black.opacity(0.001)
                 .onHover { hovering in
                     if hovering {
-                        viewModel.focus(usage.provider)
+                        viewModel.setExpanded(true)
+                    } else if viewModel.focusedProvider == nil {
+                        viewModel.setExpanded(false)
                     }
                 }
+
+            if let focused = focusedUsage {
+                UsageDetailCard(usage: focused)
+                    .offset(y: tooltipYOffset(for: focused.provider))
+            }
+        }
+        .frame(height: barHeight, alignment: .top)
+    }
+
+    private func cellButton(for usage: ProviderUsage) -> some View {
+        Button {
+            viewModel.focus(usage.provider)
+        } label: {
+            UsageRingCell(
+                usage: usage,
+                isFocused: viewModel.focusedProvider == usage.provider,
+                showsPercent: true,
+                iconSize: 28
+            )
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .onHover { hovering in
+            if hovering {
+                viewModel.focus(usage.provider)
             }
         }
     }
 
-    private var pillBackground: some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: 22, style: .continuous)
-                .fill(.ultraThinMaterial)
-            RoundedRectangle(cornerRadius: 22, style: .continuous)
-                .fill(
-                    LinearGradient(
-                        colors: [
-                            Color.black.opacity(0.72),
-                            Color.black.opacity(0.58)
-                        ],
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
-                )
-            RoundedRectangle(cornerRadius: 22, style: .continuous)
-                .strokeBorder(
-                    LinearGradient(
-                        colors: [
-                            Color.white.opacity(0.22),
-                            Color.white.opacity(0.06)
-                        ],
-                        startPoint: .top,
-                        endPoint: .bottom
-                    ),
-                    lineWidth: 0.8
-                )
+    // MARK: - Layout math
+
+    private var barHeight: CGFloat {
+        let separators = CGFloat(max(viewModel.usages.count - 1, 0)) * 0.5
+        return CGFloat(viewModel.usages.count) * cellHeight + separators + barVerticalPadding * 2
+    }
+
+    private var panelSize: CGSize {
+        if showsTooltip {
+            return CGSize(width: tooltipColumnWidth + tooltipGap + barWidth, height: barHeight)
         }
+        return CGSize(width: barWidth, height: barHeight)
     }
 
     private var focusedUsage: ProviderUsage? {
@@ -149,8 +135,16 @@ struct NotchPillView: View {
         return viewModel.usages.first
     }
 
+    private func tooltipYOffset(for provider: ProviderKind) -> CGFloat {
+        guard let index = viewModel.usages.firstIndex(where: { $0.provider == provider }) else {
+            return barVerticalPadding
+        }
+        let separatorOffset = CGFloat(index) * 0.5
+        let cellCenter = barVerticalPadding + CGFloat(index) * cellHeight + separatorOffset + cellHeight / 2
+        return cellCenter - 21
+    }
+
     private func reportSize() {
-        let size = viewModel.isExpanded ? expandedSize : collapsedSize
-        onContentSizeChange?(size)
+        onContentSizeChange?(panelSize)
     }
 }

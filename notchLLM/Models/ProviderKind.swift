@@ -17,6 +17,11 @@ enum ProviderKind: String, CaseIterable, Identifiable, Sendable {
         }
     }
 
+    /// CodeNotch-style tooltip title ("Claude Usage").
+    var usageTitle: String {
+        "\(displayName) Usage"
+    }
+
     var shortLabel: String {
         switch self {
         case .gemini: "G"
@@ -25,12 +30,12 @@ enum ProviderKind: String, CaseIterable, Identifiable, Sendable {
         }
     }
 
-    /// SF Symbol stand-in for each brand (custom artwork can replace later).
+    /// White monochrome SF Symbol stand-in for each brand.
     var systemImage: String {
         switch self {
         case .gemini: "sparkles"
-        case .chatGPT: "bubble.left.and.bubble.right.fill"
-        case .cursor: "cursorarrow.rays"
+        case .chatGPT: "brain.head.profile"
+        case .cursor: "chevron.up"
         }
     }
 

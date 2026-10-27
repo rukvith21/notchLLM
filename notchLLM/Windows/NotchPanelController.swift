@@ -3,15 +3,15 @@ import QuartzCore
 import SwiftUI
 
 /// Owns the floating `NotchPanel`, hosts SwiftUI content, and keeps the
-/// panel aligned to the active display's notch / top-center geometry.
+/// panel flush to the active display's right edge (CodeNotch layout).
 @MainActor
 final class NotchPanelController {
     private let viewModel: NotchViewModel
     private var panel: NotchPanel?
     private var hostingView: NSHostingView<NotchPillView>?
 
-    /// Tracks current content size so screen changes keep the top-center anchor.
-    private var contentSize = CGSize(width: 44, height: 118)
+    /// Tracks current content size so screen changes keep the right-edge anchor.
+    private var contentSize = CGSize(width: 298, height: 176)
 
     init(viewModel: NotchViewModel) {
         self.viewModel = viewModel
@@ -42,8 +42,10 @@ final class NotchPanelController {
         }
         let hosting = NSHostingView(rootView: root)
         hosting.frame = NSRect(origin: .zero, size: contentSize)
-        // Avoid Auto Layout stretch fighting SwiftUI's intrinsic size during expand.
         hosting.autoresizingMask = [.width, .height]
+        // Clear hosting backdrop so only the drawn black pill/tooltip are visible.
+        hosting.wantsLayer = true
+        hosting.layer?.backgroundColor = NSColor.clear.cgColor
         panel.contentView = hosting
 
         self.panel = panel
@@ -56,7 +58,7 @@ final class NotchPanelController {
             || abs(size.height - contentSize.height) > 0.5
         contentSize = size
         guard changed else { return }
-        applyFrame(size: size, animate: true)
+        applyFrame(size: size, animate: false)
     }
 
     private func applyFrame(size: CGSize, animate: Bool) {
@@ -65,7 +67,7 @@ final class NotchPanelController {
         let frame = NSRect(origin: origin, size: size)
         if animate {
             NSAnimationContext.runAnimationGroup { context in
-                context.duration = 0.28
+                context.duration = 0.18
                 context.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
                 panel.animator().setFrame(frame, display: true)
             }

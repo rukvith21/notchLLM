@@ -34,17 +34,15 @@ struct ScreenGeometry {
         self.hasNotch = inset > 0
     }
 
-    /// Top-centered origin hugging the display's top edge.
-    /// On notched displays, the pill sits just under the absolute top so it
-    /// visually flanks the hardware notch at status-bar level.
+    /// Right-edge origin for the CodeNotch-style vertical pill.
+    /// Panel content keeps the slim bar on the trailing edge; the left side
+    /// of the panel is reserved for the hover tooltip.
     func originForPanel(size: NSSize) -> NSPoint {
-        let x = frame.midX - size.width / 2
-        let y = frame.maxY - size.height - topPadding
+        let x = frame.maxX - size.width - rightPadding
+        let y = visibleFrame.midY - size.height / 2
         return NSPoint(x: x, y: y)
     }
 
-    /// Small gap under the absolute top edge on non-notch displays.
-    private var topPadding: CGFloat {
-        hasNotch ? 0 : 2
-    }
+    /// Flush to the display's right edge (1pt breathing room avoids clipping).
+    private var rightPadding: CGFloat { 1 }
 }

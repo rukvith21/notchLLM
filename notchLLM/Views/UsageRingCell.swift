@@ -1,103 +1,66 @@
 import SwiftUI
 
-/// Compact circular usage indicator for one provider.
+/// CodeNotch-style cell: white monochrome icon in a circle, optional % underneath.
 struct UsageRingCell: View {
     let usage: ProviderUsage
     var isFocused: Bool = false
-    var showsPercent: Bool = false
-    var ringSize: CGFloat = 26
+    var showsPercent: Bool = true
+    var iconSize: CGFloat = 28
 
-    private var progress: Double {
-        usage.usedFraction ?? 0
+    private var remainingFraction: Double? {
+        guard let used = usage.usedFraction else { return nil }
+        return max(0, min(1, 1 - used))
     }
 
-    private var isKnown: Bool {
-        usage.usedFraction != nil && usage.status != .unavailable
+    private var percentLabel: String {
+        guard let remaining = remainingFraction, usage.status == .ready || usage.status == .loading else {
+            return "—"
+        }
+        return "\(Int((remaining * 100).rounded()))%"
     }
 
-    private var lineWidth: CGFloat {
-        ringSize > 28 ? 3.0 : 2.4
-    }
-
-    private var ringOpacity: Double {
+    private var iconOpacity: Double {
         switch usage.status {
         case .loading: 0.55
-        case .unavailable, .error: 0.4
-        case .ready: usage.source == .degraded ? 0.75 : 1.0
+        case .unavailable, .error: 0.45
+        case .ready: 1.0
         }
     }
 
     var body: some View {
-        HStack(spacing: 6) {
+        VStack(spacing: 4) {
             ZStack {
                 Circle()
-                    .stroke(Color.white.opacity(0.10), lineWidth: lineWidth)
-
-                Circle()
-                    .stroke(usage.provider.accent.opacity(0.28), lineWidth: lineWidth)
-
-                Circle()
-                    .trim(from: 0, to: isKnown ? progress : 0.06)
-                    .stroke(
-                        AngularGradient(
-                            colors: [
-                                usage.provider.accent.opacity(0.75),
-                                usage.provider.accent
-                            ],
-                            center: .center
-                        ),
-                        style: StrokeStyle(lineWidth: lineWidth, lineCap: .round)
+                    .strokeBorder(
+                        isFocused ? Color.white.opacity(0.55) : Color.white.opacity(0.18),
+                        lineWidth: isFocused ? 1.2 : 0.8
                     )
-                    .rotationEffect(.degrees(-90))
-                    .animation(.easeInOut(duration: 0.55), value: progress)
+                    .frame(width: iconSize, height: iconSize)
 
                 Image(systemName: usage.provider.systemImage)
-                    .font(.system(size: ringSize * 0.32, weight: .semibold))
-                    .foregroundStyle(usage.provider.accent)
-                    .symbolRenderingMode(.hierarchical)
+                    .font(.system(size: iconSize * 0.42, weight: .medium))
+                    .foregroundStyle(Color.white.opacity(0.95))
+                    .symbolRenderingMode(.monochrome)
             }
-            .frame(width: ringSize, height: ringSize)
-            .opacity(ringOpacity)
-            .scaleEffect(isFocused ? 1.08 : 1.0)
-            .animation(.spring(response: 0.28, dampingFraction: 0.78), value: isFocused)
+            .opacity(iconOpacity)
+            .frame(width: iconSize, height: iconSize)
 
             if showsPercent {
-                VStack(alignment: .leading, spacing: 0) {
-                    Text(usage.provider.shortLabel)
-                        .font(.system(size: 9, weight: .semibold, design: .rounded))
-                        .foregroundStyle(.white.opacity(0.55))
-                    Text(usage.percentUsedDisplay)
-                        .font(.system(size: 11, weight: .bold, design: .rounded))
-                        .foregroundStyle(.white.opacity(0.92))
-                        .monospacedDigit()
-                }
-                .transition(.asymmetric(
-                    insertion: .opacity.combined(with: .move(edge: .leading)),
-                    removal: .opacity
-                ))
+                Text(percentLabel)
+                    .font(.system(size: 9, weight: .medium))
+                    .foregroundStyle(Color.white.opacity(0.88))
+                    .monospacedDigit()
+                    .frame(height: 11)
             }
         }
-        .help(helpText)
+        .frame(maxWidth: .infinity)
         .accessibilityLabel("\(usage.provider.displayName) usage")
         .accessibilityValue(accessibilityValue)
     }
 
-    private var helpText: String {
-        switch usage.status {
-        case .ready:
-            return "\(usage.provider.displayName): \(usage.percentUsedDisplay) · \(usage.tokensUsedDisplay) · \(usage.resetDisplay)"
-        case .loading:
-            return "\(usage.provider.displayName): refreshing…"
-        case .unavailable:
-            return "\(usage.provider.displayName): \(usage.detail ?? "unavailable")"
-        case .error(let message):
-            return "\(usage.provider.displayName): \(message)"
-        }
-    }
-
     private var accessibilityValue: String {
-        if let fraction = usage.usedFraction {
-            return "\(Int((fraction * 100).rounded())) percent used"
+        if let remaining = remainingFraction {
+            return "\(Int((remaining * 100).rounded())) percent remaining"
         }
         return String(describing: usage.status)
     }

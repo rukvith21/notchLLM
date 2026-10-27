@@ -1,90 +1,81 @@
 import SwiftUI
 
-/// Expanded detail strip shown on hover — exact %, tokens, reset timer.
+/// CodeNotch-style hover tooltip: dark rounded card extending left with a right-side pointer.
 struct UsageDetailCard: View {
     let usage: ProviderUsage
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            HStack(spacing: 6) {
+        HStack(alignment: .center, spacing: 0) {
+            HStack(alignment: .top, spacing: 8) {
                 Image(systemName: usage.provider.systemImage)
-                    .font(.system(size: 11, weight: .semibold))
-                    .foregroundStyle(usage.provider.accent)
-                Text(usage.provider.displayName)
-                    .font(.system(size: 12, weight: .semibold, design: .rounded))
-                    .foregroundStyle(.white.opacity(0.92))
-                Text(usage.sourceBadge)
-                    .font(.system(size: 9, weight: .semibold, design: .rounded))
-                    .foregroundStyle(statusTint.opacity(0.9))
-                    .padding(.horizontal, 6)
-                    .padding(.vertical, 2)
-                    .background(Capsule().fill(statusTint.opacity(0.15)))
-                Spacer(minLength: 8)
-                Text(usage.percentUsedDisplay)
-                    .font(.system(size: 12, weight: .bold, design: .rounded))
-                    .foregroundStyle(usage.provider.accent)
-                    .monospacedDigit()
-            }
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(Color.white.opacity(0.95))
+                    .symbolRenderingMode(.monochrome)
+                    .frame(width: 16, height: 16)
+                    .padding(.top, 1)
 
-            if case .error(let message) = usage.status {
-                Label(message, systemImage: "exclamationmark.triangle.fill")
-                    .font(.system(size: 10, weight: .medium, design: .rounded))
-                    .foregroundStyle(.orange.opacity(0.9))
-            } else if usage.status == .unavailable {
-                Label(usage.detail ?? "Unavailable", systemImage: "moon.zzz")
-                    .font(.system(size: 10, weight: .medium, design: .rounded))
-                    .foregroundStyle(.white.opacity(0.55))
-            } else if usage.status == .loading {
-                Label("Refreshing…", systemImage: "arrow.triangle.2.circlepath")
-                    .font(.system(size: 10, weight: .medium, design: .rounded))
-                    .foregroundStyle(.white.opacity(0.55))
-            } else {
-                ProgressView(value: usage.usedFraction ?? 0)
-                    .progressViewStyle(.linear)
-                    .tint(usage.provider.accent)
-                    .scaleEffect(x: 1, y: 0.7, anchor: .center)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(usage.provider.usageTitle)
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(Color.white.opacity(0.95))
+                        .lineLimit(1)
 
-                HStack {
-                    Label(usage.tokensUsedDisplay, systemImage: "number")
-                    Spacer(minLength: 8)
-                    Text(usage.tokensLeftDisplay)
-                        .foregroundStyle(.white.opacity(0.55))
+                    Text(subtitle)
+                        .font(.system(size: 11, weight: .regular))
+                        .foregroundStyle(Color.white.opacity(0.55))
+                        .lineLimit(2)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
-                .font(.system(size: 10, weight: .medium, design: .rounded))
-                .foregroundStyle(.white.opacity(0.78))
-
-                Label(usage.resetDisplay, systemImage: "clock.arrow.circlepath")
-                    .font(.system(size: 10, weight: .medium, design: .rounded))
-                    .foregroundStyle(.white.opacity(0.55))
             }
+            .padding(.leading, 12)
+            .padding(.trailing, 14)
+            .padding(.vertical, 10)
+            .background(
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .fill(Color.black)
+            )
 
-            if let detail = usage.detail, usage.status == .ready {
-                Text(detail)
-                    .font(.system(size: 9, weight: .regular, design: .rounded))
-                    .foregroundStyle(.white.opacity(0.42))
-                    .lineLimit(2)
-            }
+            TooltipPointer()
+                .fill(Color.black)
+                .frame(width: 8, height: 14)
+                .padding(.leading, -1)
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 10)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background {
-            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .fill(Color.white.opacity(0.06))
-                .overlay {
-                    RoundedRectangle(cornerRadius: 12, style: .continuous)
-                        .strokeBorder(statusTint.opacity(0.35), lineWidth: 0.8)
-                }
-        }
+        .fixedSize()
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(usage.provider.usageTitle). \(subtitle)")
     }
 
-    private var statusTint: Color {
+    private var subtitle: String {
         switch usage.status {
-        case .error: .orange
-        case .unavailable: .white.opacity(0.45)
-        case .loading: .white.opacity(0.55)
+        case .loading:
+            return "Refreshing…"
+        case .error(let message):
+            return message
+        case .unavailable:
+            return usage.detail
+                ?? "Sign in to \(usage.provider.displayName) to read your usage"
         case .ready:
-            usage.source == .degraded ? .orange.opacity(0.85) : usage.provider.accent
+            switch usage.authState {
+            case .unauthenticated:
+                return "Sign in to \(usage.provider.displayName) to read your usage"
+            case .apiKeyPresent, .manualOnly, .authenticated:
+                if let detail = usage.detail, !detail.isEmpty {
+                    return "\(usage.percentRemainingDisplay) · \(usage.resetDisplay)"
+                }
+                return "\(usage.percentRemainingDisplay) remaining · \(usage.resetDisplay)"
+            }
         }
+    }
+}
+
+/// Small right-pointing triangle so the tooltip aims at the bar cell.
+private struct TooltipPointer: Shape {
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+        path.move(to: CGPoint(x: rect.minX, y: rect.minY))
+        path.addLine(to: CGPoint(x: rect.maxX, y: rect.midY))
+        path.addLine(to: CGPoint(x: rect.minX, y: rect.maxY))
+        path.closeSubpath()
+        return path
     }
 }

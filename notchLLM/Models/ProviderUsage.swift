@@ -28,6 +28,13 @@ struct ProviderUsage: Identifiable, Equatable, Sendable {
         return "\(Int((usedFraction * 100).rounded()))%"
     }
 
+    /// Remaining quota percent (CodeNotch-style cell label).
+    var percentRemainingDisplay: String {
+        guard let usedFraction else { return "—" }
+        let remaining = max(0, min(1, 1 - usedFraction))
+        return "\(Int((remaining * 100).rounded()))%"
+    }
+
     var tokensUsedDisplay: String {
         guard let tokensUsed, let tokensLimit else {
             return detail ?? "No quota data"
