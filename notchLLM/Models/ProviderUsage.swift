@@ -10,6 +10,8 @@ struct ProviderUsage: Identifiable, Equatable, Sendable {
     /// When the quota window resets. `nil` if unknown.
     let resetsAt: Date?
     let status: UsageStatus
+    let source: UsageSource
+    let authState: ProviderAuthState
     let detail: String?
 
     var id: ProviderKind { provider }
@@ -45,6 +47,10 @@ struct ProviderUsage: Identifiable, Equatable, Sendable {
         return "Resets in \(Self.formatDuration(remaining))"
     }
 
+    var sourceBadge: String {
+        source.detailPrefix
+    }
+
     static func placeholder(for provider: ProviderKind) -> ProviderUsage {
         ProviderUsage(
             provider: provider,
@@ -53,18 +59,21 @@ struct ProviderUsage: Identifiable, Equatable, Sendable {
             tokensLimit: nil,
             resetsAt: nil,
             status: .unavailable,
+            source: .degraded,
+            authState: .unauthenticated,
             detail: "Adapter not connected"
         )
     }
 
-    /// Demo snapshot used by Phase-2 stubs until live adapters land.
+    /// Demo snapshot used when no credentials / manual caps are configured.
     static func mock(
         for provider: ProviderKind,
         usedFraction: Double,
         tokensUsed: Int,
         tokensLimit: Int,
         resetsIn: TimeInterval,
-        detail: String? = nil
+        detail: String? = nil,
+        authState: ProviderAuthState = .unauthenticated
     ) -> ProviderUsage {
         ProviderUsage(
             provider: provider,
@@ -73,6 +82,31 @@ struct ProviderUsage: Identifiable, Equatable, Sendable {
             tokensLimit: tokensLimit,
             resetsAt: Date().addingTimeInterval(resetsIn),
             status: .ready,
+            source: .mock,
+            authState: authState,
+            detail: detail ?? "\(UsageSource.mock.detailPrefix) · offline demo"
+        )
+    }
+
+    static func manual(
+        for provider: ProviderKind,
+        used: Int,
+        limit: Int,
+        resetsAt: Date?,
+        authState: ProviderAuthState,
+        detail: String
+    ) -> ProviderUsage {
+        let safeLimit = max(limit, 1)
+        let safeUsed = max(used, 0)
+        return ProviderUsage(
+            provider: provider,
+            usedFraction: min(Double(safeUsed) / Double(safeLimit), 1),
+            tokensUsed: safeUsed,
+            tokensLimit: safeLimit,
+            resetsAt: resetsAt,
+            status: .ready,
+            source: .manual,
+            authState: authState,
             detail: detail
         )
     }

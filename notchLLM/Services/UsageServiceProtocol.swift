@@ -1,6 +1,6 @@
 import Foundation
 
-/// Contract for a single-provider usage adapter (Phase 3 implements these).
+/// Contract for a single-provider usage adapter.
 protocol UsageProviding: Sendable {
     var kind: ProviderKind { get }
     func fetchUsage() async -> ProviderUsage

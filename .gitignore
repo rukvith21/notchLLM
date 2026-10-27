@@ -17,3 +17,7 @@ xcuserdata/
 # SwiftPM
 .swiftpm/
 .build/
+
+# Local secrets (copy to Application Support instead)
+credentials.json
+**/credentials.local.json

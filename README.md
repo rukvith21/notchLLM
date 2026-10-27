@@ -2,12 +2,14 @@
 
 Native macOS LSUIElement utility that floats a usage pill beside the hardware notch (or top-center on non-notch displays). Tracks Gemini / ChatGPT / Cursor quota at a glance.
 
-## Phase 1 (current)
+## Current (Phases 1–3)
 
 - Dock-less background agent (`LSUIElement` + `.accessory` activation policy)
 - Borderless, non-activating `NSPanel` at `.statusBar` level with `.fullScreenAuxiliary`
 - Multi-display / screen-change repositioning via `ScreenGeometry` + `DisplayObserver`
-- MVVM skeleton with provider stubs (Gemini, ChatGPT, Cursor)
+- Vertical notch pill with hover-expand usage rings (Phase 2)
+- Async adapters for Gemini / ChatGPT / Cursor with local session detection + manual caps (Phase 3)
+- See [docs/ADAPTERS.md](docs/ADAPTERS.md) for auth/fallback assumptions
 
 ## Open in Xcode
 

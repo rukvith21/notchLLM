@@ -1,6 +1,6 @@
 import Foundation
 
-/// Phase-1 stub aggregator — fans out to provider stubs without network I/O.
+/// Fans out to providers concurrently — never blocks the main thread.
 actor UsageAggregator: UsageAggregating {
     private let providers: [any UsageProviding]
 
@@ -13,11 +13,25 @@ actor UsageAggregator: UsageAggregating {
     }
 
     func refreshAll() async -> [ProviderUsage] {
-        var results: [ProviderUsage] = []
-        results.reserveCapacity(providers.count)
-        for provider in providers {
-            results.append(await provider.fetchUsage())
+        await withTaskGroup(of: (Int, ProviderUsage).self) { group in
+            for (index, provider) in providers.enumerated() {
+                group.addTask {
+                    let usage = await self.fetchSafely(provider)
+                    return (index, usage)
+                }
+            }
+
+            var ordered = providers.map { ProviderUsage.placeholder(for: $0.kind) }
+            for await (index, usage) in group {
+                ordered[index] = usage
+            }
+            return ordered
         }
-        return results
+    }
+
+    private func fetchSafely(_ provider: any UsageProviding) async -> ProviderUsage {
+        // Providers catch their own network failures; this is a last-resort shield.
+        let usage = await provider.fetchUsage()
+        return usage
     }
 }

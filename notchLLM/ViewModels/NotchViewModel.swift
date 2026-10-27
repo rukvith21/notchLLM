@@ -1,8 +1,7 @@
 import Foundation
 import Observation
 
-/// Drives the notch pill. Phase 2 adds hover expansion + mock-backed rings;
-/// Phase 3 swaps stubs for live adapters.
+/// Drives the notch pill. Phase 3 wires real adapters (async, off main UI work).
 @MainActor
 @Observable
 final class NotchViewModel {
@@ -18,12 +17,20 @@ final class NotchViewModel {
 
     init(aggregator: UsageAggregator = UsageAggregator()) {
         self.aggregator = aggregator
-        // Seed with mock-ready placeholders so first paint isn't empty.
-        self.usages = [
-            .mock(for: .gemini, usedFraction: 0.68, tokensUsed: 680_000, tokensLimit: 1_000_000, resetsIn: 4 * 3_600),
-            .mock(for: .chatGPT, usedFraction: 0.42, tokensUsed: 42_000, tokensLimit: 100_000, resetsIn: 2 * 86_400),
-            .mock(for: .cursor, usedFraction: 0.81, tokensUsed: 405, tokensLimit: 500, resetsIn: 12 * 3_600)
-        ]
+        // Neutral loading seed — refresh() fills real/mock data immediately.
+        self.usages = ProviderKind.allCases.map { kind in
+            ProviderUsage(
+                provider: kind,
+                usedFraction: nil,
+                tokensUsed: nil,
+                tokensLimit: nil,
+                resetsAt: nil,
+                status: .loading,
+                source: .degraded,
+                authState: .unauthenticated,
+                detail: "Loading…"
+            )
+        }
     }
 
     func refresh() async {
@@ -40,12 +47,21 @@ final class NotchViewModel {
                 tokensLimit: $0.tokensLimit,
                 resetsAt: $0.resetsAt,
                 status: .loading,
+                source: $0.source,
+                authState: $0.authState,
                 detail: $0.detail
             )
         }
 
+        // Aggregator is an actor — hop off MainActor for the await.
         let next = await aggregator.refreshAll()
         usages = next
+        if let firstError = next.first(where: {
+            if case .error = $0.status { return true }
+            return false
+        }) {
+            lastError = firstError.detail
+        }
     }
 
     func setExpanded(_ expanded: Bool) {

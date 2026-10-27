@@ -24,6 +24,14 @@
 		A1000000000000000000000F /* UsageRingCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000000000000000000000F /* UsageRingCell.swift */; };
 		A10000000000000000000010 /* NotchPillView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000010 /* NotchPillView.swift */; };
 		A10000000000000000000012 /* UsageDetailCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000014 /* UsageDetailCard.swift */; };
+		A10000000000000000000015 /* UsageSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000015 /* UsageSource.swift */; };
+		A10000000000000000000016 /* SettingsModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000016 /* SettingsModels.swift */; };
+		A10000000000000000000017 /* SettingsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000017 /* SettingsStore.swift */; };
+		A10000000000000000000018 /* AsyncHTTPClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000018 /* AsyncHTTPClient.swift */; };
+		A10000000000000000000019 /* CredentialStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000019 /* CredentialStore.swift */; };
+		A1000000000000000000001A /* GeminiSessionDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000000000000000000001A /* GeminiSessionDetector.swift */; };
+		A1000000000000000000001B /* CursorSessionDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000000000000000000001B /* CursorSessionDetector.swift */; };
+		A1000000000000000000001C /* ChatGPTSessionDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000000000000000000001C /* ChatGPTSessionDetector.swift */; };
 		A10000000000000000000011 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000011 /* Assets.xcassets */; };
 /* End PBXBuildFile section */
 
@@ -48,6 +56,14 @@
 		B10000000000000000000014 /* UsageDetailCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UsageDetailCard.swift; sourceTree = "<group>"; };
 		B10000000000000000000011 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		B10000000000000000000012 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		B10000000000000000000015 /* UsageSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UsageSource.swift; sourceTree = "<group>"; };
+		B10000000000000000000016 /* SettingsModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsModels.swift; sourceTree = "<group>"; };
+		B10000000000000000000017 /* SettingsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsStore.swift; sourceTree = "<group>"; };
+		B10000000000000000000018 /* AsyncHTTPClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AsyncHTTPClient.swift; sourceTree = "<group>"; };
+		B10000000000000000000019 /* CredentialStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CredentialStore.swift; sourceTree = "<group>"; };
+		B1000000000000000000001A /* GeminiSessionDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeminiSessionDetector.swift; sourceTree = "<group>"; };
+		B1000000000000000000001B /* CursorSessionDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CursorSessionDetector.swift; sourceTree = "<group>"; };
+		B1000000000000000000001C /* ChatGPTSessionDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatGPTSessionDetector.swift; sourceTree = "<group>"; };
 		B10000000000000000000013 /* notchLLM.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = notchLLM.entitlements; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -79,6 +95,7 @@
 				E10000000000000000000007 /* ViewModels */,
 				E10000000000000000000008 /* Models */,
 				E10000000000000000000009 /* Services */,
+				E1000000000000000000000C /* Settings */,
 				E1000000000000000000000A /* Utilities */,
 				B10000000000000000000011 /* Assets.xcassets */,
 				B10000000000000000000012 /* Info.plist */,
@@ -136,6 +153,7 @@
 			children = (
 				B10000000000000000000007 /* ProviderKind.swift */,
 				B10000000000000000000008 /* ProviderUsage.swift */,
+				B10000000000000000000015 /* UsageSource.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -146,6 +164,8 @@
 				B10000000000000000000009 /* UsageServiceProtocol.swift */,
 				B1000000000000000000000A /* UsageAggregator.swift */,
 				E1000000000000000000000B /* Providers */,
+				E1000000000000000000000D /* Credentials */,
+				E1000000000000000000000E /* Networking */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -167,6 +187,34 @@
 				B10000000000000000000006 /* DisplayObserver.swift */,
 			);
 			path = Utilities;
+			sourceTree = "<group>";
+		};
+		E1000000000000000000000C /* Settings */ = {
+			isa = PBXGroup;
+			children = (
+				B10000000000000000000016 /* SettingsModels.swift */,
+				B10000000000000000000017 /* SettingsStore.swift */,
+			);
+			path = Settings;
+			sourceTree = "<group>";
+		};
+		E1000000000000000000000D /* Credentials */ = {
+			isa = PBXGroup;
+			children = (
+				B10000000000000000000019 /* CredentialStore.swift */,
+				B1000000000000000000001A /* GeminiSessionDetector.swift */,
+				B1000000000000000000001B /* CursorSessionDetector.swift */,
+				B1000000000000000000001C /* ChatGPTSessionDetector.swift */,
+			);
+			path = Credentials;
+			sourceTree = "<group>";
+		};
+		E1000000000000000000000E /* Networking */ = {
+			isa = PBXGroup;
+			children = (
+				B10000000000000000000018 /* AsyncHTTPClient.swift */,
+			);
+			path = Networking;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -255,6 +303,14 @@
 				A1000000000000000000000F /* UsageRingCell.swift in Sources */,
 				A10000000000000000000010 /* NotchPillView.swift in Sources */,
 				A10000000000000000000012 /* UsageDetailCard.swift in Sources */,
+				A10000000000000000000015 /* UsageSource.swift in Sources */,
+				A10000000000000000000016 /* SettingsModels.swift in Sources */,
+				A10000000000000000000017 /* SettingsStore.swift in Sources */,
+				A10000000000000000000018 /* AsyncHTTPClient.swift in Sources */,
+				A10000000000000000000019 /* CredentialStore.swift in Sources */,
+				A1000000000000000000001A /* GeminiSessionDetector.swift in Sources */,
+				A1000000000000000000001B /* CursorSessionDetector.swift in Sources */,
+				A1000000000000000000001C /* ChatGPTSessionDetector.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
