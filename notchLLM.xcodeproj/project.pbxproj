@@ -23,6 +23,7 @@
 		A1000000000000000000000E /* NotchViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000000000000000000000E /* NotchViewModel.swift */; };
 		A1000000000000000000000F /* UsageRingCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000000000000000000000F /* UsageRingCell.swift */; };
 		A10000000000000000000010 /* NotchPillView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000010 /* NotchPillView.swift */; };
+		A10000000000000000000012 /* UsageDetailCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000014 /* UsageDetailCard.swift */; };
 		A10000000000000000000011 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000011 /* Assets.xcassets */; };
 /* End PBXBuildFile section */
 
@@ -44,6 +45,7 @@
 		B1000000000000000000000E /* NotchViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchViewModel.swift; sourceTree = "<group>"; };
 		B1000000000000000000000F /* UsageRingCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UsageRingCell.swift; sourceTree = "<group>"; };
 		B10000000000000000000010 /* NotchPillView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchPillView.swift; sourceTree = "<group>"; };
+		B10000000000000000000014 /* UsageDetailCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UsageDetailCard.swift; sourceTree = "<group>"; };
 		B10000000000000000000011 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		B10000000000000000000012 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		B10000000000000000000013 /* notchLLM.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = notchLLM.entitlements; sourceTree = "<group>"; };
@@ -116,6 +118,7 @@
 			children = (
 				B10000000000000000000010 /* NotchPillView.swift */,
 				B1000000000000000000000F /* UsageRingCell.swift */,
+				B10000000000000000000014 /* UsageDetailCard.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -251,6 +254,7 @@
 				A1000000000000000000000E /* NotchViewModel.swift in Sources */,
 				A1000000000000000000000F /* UsageRingCell.swift in Sources */,
 				A10000000000000000000010 /* NotchPillView.swift in Sources */,
+				A10000000000000000000012 /* UsageDetailCard.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
