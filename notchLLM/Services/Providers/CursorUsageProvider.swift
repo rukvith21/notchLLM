@@ -55,7 +55,7 @@ struct CursorUsageProvider: UsageProviding {
             )
         }
 
-        if apiKey != nil {
+        if apiKey != nil, settings.manualFallbackEnabled || manual.windowLimit > 0 {
             return .manual(
                 for: .cursor,
                 used: manual.windowUsed > 0 ? manual.windowUsed : Int(Double(max(manual.windowLimit, 1)) * 0.4),
@@ -63,6 +63,17 @@ struct CursorUsageProvider: UsageProviding {
                 resetsAt: manual.windowResetsAt ?? endOfLocalMonth(),
                 authState: .apiKeyPresent,
                 detail: "CURSOR_API_KEY present · live usage not wired · manual cap"
+            )
+        }
+
+        if settings.manualFallbackEnabled, manual.windowLimit > 0 {
+            return .manual(
+                for: .cursor,
+                used: manual.windowUsed,
+                limit: manual.windowLimit,
+                resetsAt: manual.windowResetsAt ?? endOfLocalMonth(),
+                authState: .manualOnly,
+                detail: "Manual \(manual.tier) cap · no Cursor session"
             )
         }
 

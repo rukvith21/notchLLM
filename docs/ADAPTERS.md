@@ -33,13 +33,17 @@ Assumptions:
 - Optional live: `GET https://cursor.com/api/usage` with Bearer access token (best-effort; shape may change)
 - Falls back to membership-based manual estimate
 
-## Settings file (Phase 4 UI will edit)
+## Settings (Phase 4)
 
-`~/Library/Application Support/notchLLM/settings.json`
+**Entry points**
+- Menu-bar status item → **Settings…** / **Refresh Usage** / **Quit notchLLM**
+- Caps JSON: `~/Library/Application Support/notchLLM/settings.json`
+- API keys: Keychain service `notchLLM` accounts `gemini` | `openai` | `cursor`
 
 ```json
 {
   "preferMockWhenUnauthenticated": true,
+  "manualFallbackEnabled": true,
   "providers": {
     "gemini": { "tier": "pro", "windowLimit": 1000000, "windowUsed": 0, "apiKeyHintPresent": false },
     "chatGPT": { "tier": "plus", "windowLimit": 100000, "windowUsed": 0, "apiKeyHintPresent": false },
@@ -47,6 +51,8 @@ Assumptions:
   }
 }
 ```
+
+Saving settings posts `notchLLM.settingsDidChange` so rings refresh without restart.
 
 ## Sandbox
 

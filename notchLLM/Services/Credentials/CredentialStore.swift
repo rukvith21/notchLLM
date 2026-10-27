@@ -2,9 +2,16 @@ import Foundation
 import Security
 
 /// Resolves API keys from env → Keychain (notchLLM) → credentials.json.
-/// Never prompts; missing keys simply return nil.
+/// Settings UI writes secrets to Keychain only (never into settings.json).
 actor CredentialStore {
     static let shared = CredentialStore()
+    static let keychainService = "notchLLM"
+
+    enum Account: String, CaseIterable, Sendable {
+        case gemini
+        case openai
+        case cursor
+    }
 
     private let credentialsFileURL: URL
 
@@ -19,7 +26,7 @@ actor CredentialStore {
         firstNonEmpty([
             ProcessInfo.processInfo.environment["GEMINI_API_KEY"],
             ProcessInfo.processInfo.environment["GOOGLE_API_KEY"],
-            keychainValue(account: "gemini"),
+            keychainValue(account: .gemini),
             fileCredentials()?.geminiAPIKey
         ])
     }
@@ -27,7 +34,7 @@ actor CredentialStore {
     func openAIAPIKey() -> String? {
         firstNonEmpty([
             ProcessInfo.processInfo.environment["OPENAI_API_KEY"],
-            keychainValue(account: "openai"),
+            keychainValue(account: .openai),
             fileCredentials()?.openAIAPIKey
         ])
     }
@@ -35,9 +42,40 @@ actor CredentialStore {
     func cursorAPIKey() -> String? {
         firstNonEmpty([
             ProcessInfo.processInfo.environment["CURSOR_API_KEY"],
-            keychainValue(account: "cursor"),
+            keychainValue(account: .cursor),
             fileCredentials()?.cursorAPIKey
         ])
+    }
+
+    func hasKeychainValue(account: Account) -> Bool {
+        keychainValue(account: account) != nil
+    }
+
+    /// Empty / whitespace `value` deletes the Keychain item.
+    @discardableResult
+    func setAPIKey(_ value: String?, account: Account) -> Bool {
+        let trimmed = value?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        deleteKeychainValue(account: account)
+        guard !trimmed.isEmpty else { return true }
+        guard let data = trimmed.data(using: .utf8) else { return false }
+
+        let query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: Self.keychainService,
+            kSecAttrAccount as String: account.rawValue,
+            kSecValueData as String: data,
+            kSecAttrAccessible as String: kSecAttrAccessibleWhenUnlocked
+        ]
+        let status = SecItemAdd(query as CFDictionary, nil)
+        return status == errSecSuccess
+    }
+
+    func maskedKeyPreview(account: Account) -> String? {
+        guard let key = keychainValue(account: account), key.count >= 4 else {
+            return keychainValue(account: account).map { String(repeating: "•", count: max($0.count, 4)) }
+        }
+        let suffix = key.suffix(4)
+        return String(repeating: "•", count: max(key.count - 4, 4)) + suffix
     }
 
     // MARK: - Private
@@ -48,11 +86,11 @@ actor CredentialStore {
         return try? JSONDecoder().decode(CredentialsFile.self, from: data)
     }
 
-    private func keychainValue(account: String) -> String? {
+    private func keychainValue(account: Account) -> String? {
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
-            kSecAttrService as String: "notchLLM",
-            kSecAttrAccount as String: account,
+            kSecAttrService as String: Self.keychainService,
+            kSecAttrAccount as String: account.rawValue,
             kSecReturnData as String: true,
             kSecMatchLimit as String: kSecMatchLimitOne
         ]
@@ -60,6 +98,15 @@ actor CredentialStore {
         let status = SecItemCopyMatching(query as CFDictionary, &item)
         guard status == errSecSuccess, let data = item as? Data else { return nil }
         return String(data: data, encoding: .utf8)
+    }
+
+    private func deleteKeychainValue(account: Account) {
+        let query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: Self.keychainService,
+            kSecAttrAccount as String: account.rawValue
+        ]
+        SecItemDelete(query as CFDictionary)
     }
 
     private func firstNonEmpty(_ values: [String?]) -> String? {

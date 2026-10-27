@@ -32,6 +32,10 @@
 		A1000000000000000000001A /* GeminiSessionDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000000000000000000001A /* GeminiSessionDetector.swift */; };
 		A1000000000000000000001B /* CursorSessionDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000000000000000000001B /* CursorSessionDetector.swift */; };
 		A1000000000000000000001C /* ChatGPTSessionDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000000000000000000001C /* ChatGPTSessionDetector.swift */; };
+		A10000000000000000000020 /* SettingsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000020 /* SettingsViewModel.swift */; };
+		A10000000000000000000021 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000021 /* SettingsView.swift */; };
+		A10000000000000000000022 /* SettingsWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000022 /* SettingsWindowController.swift */; };
+		A10000000000000000000023 /* StatusItemController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000023 /* StatusItemController.swift */; };
 		A10000000000000000000011 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000011 /* Assets.xcassets */; };
 /* End PBXBuildFile section */
 
@@ -64,6 +68,10 @@
 		B1000000000000000000001A /* GeminiSessionDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeminiSessionDetector.swift; sourceTree = "<group>"; };
 		B1000000000000000000001B /* CursorSessionDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CursorSessionDetector.swift; sourceTree = "<group>"; };
 		B1000000000000000000001C /* ChatGPTSessionDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatGPTSessionDetector.swift; sourceTree = "<group>"; };
+		B10000000000000000000020 /* SettingsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsViewModel.swift; sourceTree = "<group>"; };
+		B10000000000000000000021 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		B10000000000000000000022 /* SettingsWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsWindowController.swift; sourceTree = "<group>"; };
+		B10000000000000000000023 /* StatusItemController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusItemController.swift; sourceTree = "<group>"; };
 		B10000000000000000000013 /* notchLLM.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = notchLLM.entitlements; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -126,6 +134,8 @@
 			children = (
 				B10000000000000000000003 /* NotchPanel.swift */,
 				B10000000000000000000004 /* NotchPanelController.swift */,
+				B10000000000000000000022 /* SettingsWindowController.swift */,
+				B10000000000000000000023 /* StatusItemController.swift */,
 			);
 			path = Windows;
 			sourceTree = "<group>";
@@ -136,6 +146,7 @@
 				B10000000000000000000010 /* NotchPillView.swift */,
 				B1000000000000000000000F /* UsageRingCell.swift */,
 				B10000000000000000000014 /* UsageDetailCard.swift */,
+				B10000000000000000000021 /* SettingsView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -144,6 +155,7 @@
 			isa = PBXGroup;
 			children = (
 				B1000000000000000000000E /* NotchViewModel.swift */,
+				B10000000000000000000020 /* SettingsViewModel.swift */,
 			);
 			path = ViewModels;
 			sourceTree = "<group>";
@@ -311,6 +323,10 @@
 				A1000000000000000000001A /* GeminiSessionDetector.swift in Sources */,
 				A1000000000000000000001B /* CursorSessionDetector.swift in Sources */,
 				A1000000000000000000001C /* ChatGPTSessionDetector.swift in Sources */,
+				A10000000000000000000020 /* SettingsViewModel.swift in Sources */,
+				A10000000000000000000021 /* SettingsView.swift in Sources */,
+				A10000000000000000000022 /* SettingsWindowController.swift in Sources */,
+				A10000000000000000000023 /* StatusItemController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -53,7 +53,7 @@ struct ChatGPTUsageProvider: UsageProviding {
             )
         }
 
-        if manual.windowLimit > 0 {
+        if settings.manualFallbackEnabled, manual.windowLimit > 0 {
             return .manual(
                 for: .chatGPT,
                 used: manual.windowUsed,

@@ -49,7 +49,7 @@ struct GeminiUsageProvider: UsageProviding {
             return await resolveAPIKey(apiKey: apiKey, manual: manual)
         }
 
-        if manual.windowLimit > 0 {
+        if settings.manualFallbackEnabled, manual.windowLimit > 0 {
             return .manual(
                 for: .gemini,
                 used: manual.windowUsed,

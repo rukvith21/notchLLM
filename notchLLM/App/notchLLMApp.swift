@@ -1,16 +1,16 @@
 import SwiftUI
 
-/// notchLLM — Phase 1 LSUIElement macOS agent.
-/// Dock-less background app that hosts a floating NSPanel beside the notch.
+/// notchLLM — LSUIElement macOS agent with notch pill + menu-bar settings.
 @main
 struct NotchLLMApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
 
     var body: some Scene {
-        // Settings scene reserved for Phase 4; empty Commands keeps SwiftUI lifecycle alive
-        // without a visible window (the notch panel is owned by AppKit).
+        // Settings scene kept so SwiftUI lifecycle stays alive; real prefs UI is
+        // the AppKit window opened from the status-item menu.
         Settings {
-            EmptyView()
+            Text("Open Settings from the notchLLM menu-bar icon.")
+                .padding()
         }
     }
 }

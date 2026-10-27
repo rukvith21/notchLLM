@@ -1,7 +1,7 @@
 import Foundation
 import Observation
 
-/// Drives the notch pill. Phase 3 wires real adapters (async, off main UI work).
+/// Drives the notch pill. Observes settings changes so rings refresh without restart.
 @MainActor
 @Observable
 final class NotchViewModel {
@@ -9,15 +9,15 @@ final class NotchViewModel {
     private(set) var isRefreshing = false
     private(set) var lastError: String?
 
-    /// Pill hover / detail expansion state (UI only).
     var isExpanded = false
     var focusedProvider: ProviderKind?
 
     private let aggregator: UsageAggregator
+    /// Stored as nonisolated so `deinit` can clear it without MainActor hops.
+    nonisolated(unsafe) private var settingsObserver: NSObjectProtocol?
 
     init(aggregator: UsageAggregator = UsageAggregator()) {
         self.aggregator = aggregator
-        // Neutral loading seed — refresh() fills real/mock data immediately.
         self.usages = ProviderKind.allCases.map { kind in
             ProviderUsage(
                 provider: kind,
@@ -30,6 +30,26 @@ final class NotchViewModel {
                 authState: .unauthenticated,
                 detail: "Loading…"
             )
+        }
+    }
+
+    func startObservingSettingsChanges() {
+        guard settingsObserver == nil else { return }
+        settingsObserver = NotificationCenter.default.addObserver(
+            forName: .notchLLMSettingsDidChange,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor in
+                await self?.refresh()
+            }
+        }
+    }
+
+    func stopObservingSettingsChanges() {
+        if let settingsObserver {
+            NotificationCenter.default.removeObserver(settingsObserver)
+            self.settingsObserver = nil
         }
     }
 
@@ -53,7 +73,6 @@ final class NotchViewModel {
             )
         }
 
-        // Aggregator is an actor — hop off MainActor for the await.
         let next = await aggregator.refreshAll()
         usages = next
         if let firstError = next.first(where: {
@@ -75,6 +94,12 @@ final class NotchViewModel {
         focusedProvider = provider
         if provider != nil {
             isExpanded = true
+        }
+    }
+
+    deinit {
+        if let settingsObserver {
+            NotificationCenter.default.removeObserver(settingsObserver)
         }
     }
 }

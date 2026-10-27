@@ -19,6 +19,14 @@ struct UsageRingCell: View {
         ringSize > 28 ? 3.0 : 2.4
     }
 
+    private var ringOpacity: Double {
+        switch usage.status {
+        case .loading: 0.55
+        case .unavailable, .error: 0.4
+        case .ready: usage.source == .degraded ? 0.75 : 1.0
+        }
+    }
+
     var body: some View {
         HStack(spacing: 6) {
             ZStack {
@@ -49,6 +57,7 @@ struct UsageRingCell: View {
                     .symbolRenderingMode(.hierarchical)
             }
             .frame(width: ringSize, height: ringSize)
+            .opacity(ringOpacity)
             .scaleEffect(isFocused ? 1.08 : 1.0)
             .animation(.spring(response: 0.28, dampingFraction: 0.78), value: isFocused)
 
