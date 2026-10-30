@@ -1,0 +1,449 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		A10000000000000000000001 /* notchLLMApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000001 /* notchLLMApp.swift */; };
+		A10000000000000000000002 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000002 /* AppDelegate.swift */; };
+		A10000000000000000000003 /* NotchPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000003 /* NotchPanel.swift */; };
+		A10000000000000000000004 /* NotchPanelController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000004 /* NotchPanelController.swift */; };
+		A10000000000000000000005 /* ScreenGeometry.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000005 /* ScreenGeometry.swift */; };
+		A10000000000000000000006 /* DisplayObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000006 /* DisplayObserver.swift */; };
+		A10000000000000000000007 /* ProviderKind.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000007 /* ProviderKind.swift */; };
+		A10000000000000000000008 /* ProviderUsage.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000008 /* ProviderUsage.swift */; };
+		A10000000000000000000009 /* UsageServiceProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000009 /* UsageServiceProtocol.swift */; };
+		A1000000000000000000000A /* UsageAggregator.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000000000000000000000A /* UsageAggregator.swift */; };
+		A1000000000000000000000B /* GeminiUsageProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000000000000000000000B /* GeminiUsageProvider.swift */; };
+		A1000000000000000000000C /* ChatGPTUsageProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000000000000000000000C /* ChatGPTUsageProvider.swift */; };
+		A1000000000000000000000D /* CursorUsageProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000000000000000000000D /* CursorUsageProvider.swift */; };
+		A1000000000000000000000E /* NotchViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000000000000000000000E /* NotchViewModel.swift */; };
+		A1000000000000000000000F /* UsageRingCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000000000000000000000F /* UsageRingCell.swift */; };
+		A10000000000000000000010 /* NotchPillView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000010 /* NotchPillView.swift */; };
+		A10000000000000000000012 /* UsageDetailCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000014 /* UsageDetailCard.swift */; };
+		A10000000000000000000015 /* UsageSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000015 /* UsageSource.swift */; };
+		A10000000000000000000016 /* SettingsModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000016 /* SettingsModels.swift */; };
+		A10000000000000000000017 /* SettingsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000017 /* SettingsStore.swift */; };
+		A10000000000000000000018 /* AsyncHTTPClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000018 /* AsyncHTTPClient.swift */; };
+		A10000000000000000000019 /* CredentialStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000019 /* CredentialStore.swift */; };
+		A1000000000000000000001A /* GeminiSessionDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000000000000000000001A /* GeminiSessionDetector.swift */; };
+		A1000000000000000000001B /* CursorSessionDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000000000000000000001B /* CursorSessionDetector.swift */; };
+		A1000000000000000000001C /* ChatGPTSessionDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000000000000000000001C /* ChatGPTSessionDetector.swift */; };
+		A10000000000000000000020 /* SettingsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000020 /* SettingsViewModel.swift */; };
+		A10000000000000000000021 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000021 /* SettingsView.swift */; };
+		A10000000000000000000022 /* SettingsWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000022 /* SettingsWindowController.swift */; };
+		A10000000000000000000023 /* StatusItemController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000023 /* StatusItemController.swift */; };
+		A10000000000000000000011 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000011 /* Assets.xcassets */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		C10000000000000000000001 /* notchLLM.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = notchLLM.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		B10000000000000000000001 /* notchLLMApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = notchLLMApp.swift; sourceTree = "<group>"; };
+		B10000000000000000000002 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		B10000000000000000000003 /* NotchPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchPanel.swift; sourceTree = "<group>"; };
+		B10000000000000000000004 /* NotchPanelController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchPanelController.swift; sourceTree = "<group>"; };
+		B10000000000000000000005 /* ScreenGeometry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenGeometry.swift; sourceTree = "<group>"; };
+		B10000000000000000000006 /* DisplayObserver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DisplayObserver.swift; sourceTree = "<group>"; };
+		B10000000000000000000007 /* ProviderKind.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProviderKind.swift; sourceTree = "<group>"; };
+		B10000000000000000000008 /* ProviderUsage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProviderUsage.swift; sourceTree = "<group>"; };
+		B10000000000000000000009 /* UsageServiceProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UsageServiceProtocol.swift; sourceTree = "<group>"; };
+		B1000000000000000000000A /* UsageAggregator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UsageAggregator.swift; sourceTree = "<group>"; };
+		B1000000000000000000000B /* GeminiUsageProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeminiUsageProvider.swift; sourceTree = "<group>"; };
+		B1000000000000000000000C /* ChatGPTUsageProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatGPTUsageProvider.swift; sourceTree = "<group>"; };
+		B1000000000000000000000D /* CursorUsageProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CursorUsageProvider.swift; sourceTree = "<group>"; };
+		B1000000000000000000000E /* NotchViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchViewModel.swift; sourceTree = "<group>"; };
+		B1000000000000000000000F /* UsageRingCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UsageRingCell.swift; sourceTree = "<group>"; };
+		B10000000000000000000010 /* NotchPillView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchPillView.swift; sourceTree = "<group>"; };
+		B10000000000000000000014 /* UsageDetailCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UsageDetailCard.swift; sourceTree = "<group>"; };
+		B10000000000000000000011 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		B10000000000000000000012 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		B10000000000000000000015 /* UsageSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UsageSource.swift; sourceTree = "<group>"; };
+		B10000000000000000000016 /* SettingsModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsModels.swift; sourceTree = "<group>"; };
+		B10000000000000000000017 /* SettingsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsStore.swift; sourceTree = "<group>"; };
+		B10000000000000000000018 /* AsyncHTTPClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AsyncHTTPClient.swift; sourceTree = "<group>"; };
+		B10000000000000000000019 /* CredentialStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CredentialStore.swift; sourceTree = "<group>"; };
+		B1000000000000000000001A /* GeminiSessionDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeminiSessionDetector.swift; sourceTree = "<group>"; };
+		B1000000000000000000001B /* CursorSessionDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CursorSessionDetector.swift; sourceTree = "<group>"; };
+		B1000000000000000000001C /* ChatGPTSessionDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatGPTSessionDetector.swift; sourceTree = "<group>"; };
+		B10000000000000000000020 /* SettingsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsViewModel.swift; sourceTree = "<group>"; };
+		B10000000000000000000021 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		B10000000000000000000022 /* SettingsWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsWindowController.swift; sourceTree = "<group>"; };
+		B10000000000000000000023 /* StatusItemController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusItemController.swift; sourceTree = "<group>"; };
+		B10000000000000000000013 /* notchLLM.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = notchLLM.entitlements; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		D10000000000000000000001 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		E10000000000000000000001 = {
+			isa = PBXGroup;
+			children = (
+				E10000000000000000000002 /* notchLLM */,
+				E10000000000000000000003 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		E10000000000000000000002 /* notchLLM */ = {
+			isa = PBXGroup;
+			children = (
+				E10000000000000000000004 /* App */,
+				E10000000000000000000005 /* Windows */,
+				E10000000000000000000006 /* Views */,
+				E10000000000000000000007 /* ViewModels */,
+				E10000000000000000000008 /* Models */,
+				E10000000000000000000009 /* Services */,
+				E1000000000000000000000C /* Settings */,
+				E1000000000000000000000A /* Utilities */,
+				B10000000000000000000011 /* Assets.xcassets */,
+				B10000000000000000000012 /* Info.plist */,
+				B10000000000000000000013 /* notchLLM.entitlements */,
+			);
+			path = notchLLM;
+			sourceTree = "<group>";
+		};
+		E10000000000000000000003 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				C10000000000000000000001 /* notchLLM.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		E10000000000000000000004 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				B10000000000000000000001 /* notchLLMApp.swift */,
+				B10000000000000000000002 /* AppDelegate.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		E10000000000000000000005 /* Windows */ = {
+			isa = PBXGroup;
+			children = (
+				B10000000000000000000003 /* NotchPanel.swift */,
+				B10000000000000000000004 /* NotchPanelController.swift */,
+				B10000000000000000000022 /* SettingsWindowController.swift */,
+				B10000000000000000000023 /* StatusItemController.swift */,
+			);
+			path = Windows;
+			sourceTree = "<group>";
+		};
+		E10000000000000000000006 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				B10000000000000000000010 /* NotchPillView.swift */,
+				B1000000000000000000000F /* UsageRingCell.swift */,
+				B10000000000000000000014 /* UsageDetailCard.swift */,
+				B10000000000000000000021 /* SettingsView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		E10000000000000000000007 /* ViewModels */ = {
+			isa = PBXGroup;
+			children = (
+				B1000000000000000000000E /* NotchViewModel.swift */,
+				B10000000000000000000020 /* SettingsViewModel.swift */,
+			);
+			path = ViewModels;
+			sourceTree = "<group>";
+		};
+		E10000000000000000000008 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				B10000000000000000000007 /* ProviderKind.swift */,
+				B10000000000000000000008 /* ProviderUsage.swift */,
+				B10000000000000000000015 /* UsageSource.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		E10000000000000000000009 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				B10000000000000000000009 /* UsageServiceProtocol.swift */,
+				B1000000000000000000000A /* UsageAggregator.swift */,
+				E1000000000000000000000B /* Providers */,
+				E1000000000000000000000D /* Credentials */,
+				E1000000000000000000000E /* Networking */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		E1000000000000000000000B /* Providers */ = {
+			isa = PBXGroup;
+			children = (
+				B1000000000000000000000B /* GeminiUsageProvider.swift */,
+				B1000000000000000000000C /* ChatGPTUsageProvider.swift */,
+				B1000000000000000000000D /* CursorUsageProvider.swift */,
+			);
+			path = Providers;
+			sourceTree = "<group>";
+		};
+		E1000000000000000000000A /* Utilities */ = {
+			isa = PBXGroup;
+			children = (
+				B10000000000000000000005 /* ScreenGeometry.swift */,
+				B10000000000000000000006 /* DisplayObserver.swift */,
+			);
+			path = Utilities;
+			sourceTree = "<group>";
+		};
+		E1000000000000000000000C /* Settings */ = {
+			isa = PBXGroup;
+			children = (
+				B10000000000000000000016 /* SettingsModels.swift */,
+				B10000000000000000000017 /* SettingsStore.swift */,
+			);
+			path = Settings;
+			sourceTree = "<group>";
+		};
+		E1000000000000000000000D /* Credentials */ = {
+			isa = PBXGroup;
+			children = (
+				B10000000000000000000019 /* CredentialStore.swift */,
+				B1000000000000000000001A /* GeminiSessionDetector.swift */,
+				B1000000000000000000001B /* CursorSessionDetector.swift */,
+				B1000000000000000000001C /* ChatGPTSessionDetector.swift */,
+			);
+			path = Credentials;
+			sourceTree = "<group>";
+		};
+		E1000000000000000000000E /* Networking */ = {
+			isa = PBXGroup;
+			children = (
+				B10000000000000000000018 /* AsyncHTTPClient.swift */,
+			);
+			path = Networking;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		F10000000000000000000001 /* notchLLM */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = F10000000000000000000004 /* Build configuration list for PBXNativeTarget "notchLLM" */;
+			buildPhases = (
+				F10000000000000000000002 /* Sources */,
+				D10000000000000000000001 /* Frameworks */,
+				F10000000000000000000003 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = notchLLM;
+			productName = notchLLM;
+			productReference = C10000000000000000000001 /* notchLLM.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		F10000000000000000000005 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1600;
+				LastUpgradeCheck = 1600;
+				TargetAttributes = {
+					F10000000000000000000001 = {
+						CreatedOnToolsVersion = 16.0;
+					};
+				};
+			};
+			buildConfigurationList = F10000000000000000000006 /* Build configuration list for PBXProject "notchLLM" */;
+			compatibilityVersion = "Xcode 15.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = E10000000000000000000001;
+			productRefGroup = E10000000000000000000003 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				F10000000000000000000001 /* notchLLM */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		F10000000000000000000003 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A10000000000000000000011 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		F10000000000000000000002 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A10000000000000000000001 /* notchLLMApp.swift in Sources */,
+				A10000000000000000000002 /* AppDelegate.swift in Sources */,
+				A10000000000000000000003 /* NotchPanel.swift in Sources */,
+				A10000000000000000000004 /* NotchPanelController.swift in Sources */,
+				A10000000000000000000005 /* ScreenGeometry.swift in Sources */,
+				A10000000000000000000006 /* DisplayObserver.swift in Sources */,
+				A10000000000000000000007 /* ProviderKind.swift in Sources */,
+				A10000000000000000000008 /* ProviderUsage.swift in Sources */,
+				A10000000000000000000009 /* UsageServiceProtocol.swift in Sources */,
+				A1000000000000000000000A /* UsageAggregator.swift in Sources */,
+				A1000000000000000000000B /* GeminiUsageProvider.swift in Sources */,
+				A1000000000000000000000C /* ChatGPTUsageProvider.swift in Sources */,
+				A1000000000000000000000D /* CursorUsageProvider.swift in Sources */,
+				A1000000000000000000000E /* NotchViewModel.swift in Sources */,
+				A1000000000000000000000F /* UsageRingCell.swift in Sources */,
+				A10000000000000000000010 /* NotchPillView.swift in Sources */,
+				A10000000000000000000012 /* UsageDetailCard.swift in Sources */,
+				A10000000000000000000015 /* UsageSource.swift in Sources */,
+				A10000000000000000000016 /* SettingsModels.swift in Sources */,
+				A10000000000000000000017 /* SettingsStore.swift in Sources */,
+				A10000000000000000000018 /* AsyncHTTPClient.swift in Sources */,
+				A10000000000000000000019 /* CredentialStore.swift in Sources */,
+				A1000000000000000000001A /* GeminiSessionDetector.swift in Sources */,
+				A1000000000000000000001B /* CursorSessionDetector.swift in Sources */,
+				A1000000000000000000001C /* ChatGPTSessionDetector.swift in Sources */,
+				A10000000000000000000020 /* SettingsViewModel.swift in Sources */,
+				A10000000000000000000021 /* SettingsView.swift in Sources */,
+				A10000000000000000000022 /* SettingsWindowController.swift in Sources */,
+				A10000000000000000000023 /* StatusItemController.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		F10000000000000000000007 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_TESTABILITY = YES;
+				GCC_DYNAMIC_NO_PIC = NO;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		F10000000000000000000008 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+			};
+			name = Release;
+		};
+		F10000000000000000000009 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = notchLLM/notchLLM.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = notchLLM/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = notchLLM;
+				INFOPLIST_KEY_LSUIElement = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2026. All rights reserved.";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.notchllm.app;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		F1000000000000000000000A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = notchLLM/notchLLM.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = notchLLM/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = notchLLM;
+				INFOPLIST_KEY_LSUIElement = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2026. All rights reserved.";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.notchllm.app;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		F10000000000000000000006 /* Build configuration list for PBXProject "notchLLM" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F10000000000000000000007 /* Debug */,
+				F10000000000000000000008 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		F10000000000000000000004 /* Build configuration list for PBXNativeTarget "notchLLM" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F10000000000000000000009 /* Debug */,
+				F1000000000000000000000A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = F10000000000000000000005 /* Project object */;
+}
