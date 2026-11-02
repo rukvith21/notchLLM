@@ -13,18 +13,21 @@ final class SettingsViewModel {
     var geminiUsed = 0
     var geminiAPIKeyInput = ""
     var geminiKeyPresent = false
+    var geminiKeyPreview: String?
 
     var chatGPTTier = "plus"
     var chatGPTLimit = 100_000
     var chatGPTUsed = 0
     var chatGPTAPIKeyInput = ""
     var chatGPTKeyPresent = false
+    var chatGPTKeyPreview: String?
 
     var cursorTier = "pro"
     var cursorLimit = 500
     var cursorUsed = 0
     var cursorAPIKeyInput = ""
     var cursorKeyPresent = false
+    var cursorKeyPreview: String?
 
     var statusMessage: String?
     var isSaving = false
@@ -67,6 +70,9 @@ final class SettingsViewModel {
         geminiKeyPresent = await credentials.hasKeychainValue(account: .gemini)
         chatGPTKeyPresent = await credentials.hasKeychainValue(account: .openai)
         cursorKeyPresent = await credentials.hasKeychainValue(account: .cursor)
+        geminiKeyPreview = await credentials.maskedKeyPreview(account: .gemini)
+        chatGPTKeyPreview = await credentials.maskedKeyPreview(account: .openai)
+        cursorKeyPreview = await credentials.maskedKeyPreview(account: .cursor)
 
         geminiAPIKeyInput = ""
         chatGPTAPIKeyInput = ""
@@ -122,10 +128,13 @@ final class SettingsViewModel {
             geminiKeyPresent = gemini.apiKeyHintPresent
             chatGPTKeyPresent = chat.apiKeyHintPresent
             cursorKeyPresent = cursor.apiKeyHintPresent
+            geminiKeyPreview = await credentials.maskedKeyPreview(account: .gemini)
+            chatGPTKeyPreview = await credentials.maskedKeyPreview(account: .openai)
+            cursorKeyPreview = await credentials.maskedKeyPreview(account: .cursor)
             geminiAPIKeyInput = ""
             chatGPTAPIKeyInput = ""
             cursorAPIKeyInput = ""
-            statusMessage = "Saved — rings refreshing…"
+            statusMessage = "Saved — Keychain + caps updated · rings refreshing…"
             NotificationCenter.default.post(name: .notchLLMSettingsDidChange, object: nil)
         } catch {
             statusMessage = "Save failed: \(error.localizedDescription)"
@@ -150,15 +159,18 @@ final class SettingsViewModel {
         switch kind {
         case .gemini:
             geminiKeyPresent = false
+            geminiKeyPreview = nil
             geminiAPIKeyInput = ""
         case .chatGPT:
             chatGPTKeyPresent = false
+            chatGPTKeyPreview = nil
             chatGPTAPIKeyInput = ""
         case .cursor:
             cursorKeyPresent = false
+            cursorKeyPreview = nil
             cursorAPIKeyInput = ""
         }
-        statusMessage = "\(kind.displayName) key cleared"
+        statusMessage = "\(kind.displayName) Keychain key cleared"
         NotificationCenter.default.post(name: .notchLLMSettingsDidChange, object: nil)
     }
 }

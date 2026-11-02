@@ -12,38 +12,44 @@ struct SettingsView: View {
                 Section("General") {
                     Toggle("Prefer demo mock when unsigned-in", isOn: $viewModel.preferMockWhenUnauthenticated)
                     Toggle("Enable manual fallback token caps", isOn: $viewModel.manualFallbackEnabled)
-                    Text("Caps are stored in ~/Library/Application Support/notchLLM/settings.json. API keys go to Keychain (service notchLLM).")
+                    Text("Caps live in ~/Library/Application Support/notchLLM/settings.json. API keys go only to Keychain (service notchLLM) — never into the JSON file.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
 
                 providerSection(
                     title: "Gemini",
+                    hint: "No login loop — local Gemini session or API key is enough.",
                     tier: $viewModel.geminiTier,
                     limit: $viewModel.geminiLimit,
                     used: $viewModel.geminiUsed,
                     keyInput: $viewModel.geminiAPIKeyInput,
                     keyPresent: viewModel.geminiKeyPresent,
+                    keyPreview: viewModel.geminiKeyPreview,
                     kind: .gemini
                 )
 
                 providerSection(
                     title: "ChatGPT / OpenAI",
+                    hint: "Uses Codex ~/.codex/auth.json or OPENAI_API_KEY + manual window.",
                     tier: $viewModel.chatGPTTier,
                     limit: $viewModel.chatGPTLimit,
                     used: $viewModel.chatGPTUsed,
                     keyInput: $viewModel.chatGPTAPIKeyInput,
                     keyPresent: viewModel.chatGPTKeyPresent,
+                    keyPreview: viewModel.chatGPTKeyPreview,
                     kind: .chatGPT
                 )
 
                 providerSection(
                     title: "Cursor",
+                    hint: "Reads Cursor state.vscdb; live /api/usage when a token is present.",
                     tier: $viewModel.cursorTier,
                     limit: $viewModel.cursorLimit,
                     used: $viewModel.cursorUsed,
                     keyInput: $viewModel.cursorAPIKeyInput,
                     keyPresent: viewModel.cursorKeyPresent,
+                    keyPreview: viewModel.cursorKeyPreview,
                     kind: .cursor
                 )
             }
@@ -52,7 +58,7 @@ struct SettingsView: View {
 
             footer
         }
-        .frame(minWidth: 480, idealWidth: 520, minHeight: 560)
+        .frame(minWidth: 500, idealWidth: 540, minHeight: 620)
         .task { await viewModel.load() }
     }
 
@@ -61,7 +67,7 @@ struct SettingsView: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text("notchLLM Settings")
                     .font(.title2.weight(.semibold))
-                Text("Keys & fallback caps")
+                Text("Keychain API keys & manual usage caps")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
             }
@@ -99,27 +105,61 @@ struct SettingsView: View {
     @ViewBuilder
     private func providerSection(
         title: String,
+        hint: String,
         tier: Binding<String>,
         limit: Binding<Int>,
         used: Binding<Int>,
         keyInput: Binding<String>,
         keyPresent: Bool,
+        keyPreview: String?,
         kind: ProviderKind
     ) -> some View {
-        Section(title) {
+        Section {
+            Text(hint)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+
             TextField("Tier (free / pro / plus…)", text: tier)
-            TextField("Window limit", value: limit, format: .number)
-            TextField("Window used", value: used, format: .number)
 
-            SecureField(keyPresent ? "Replace API key (saved in Keychain)" : "API key (saved in Keychain)", text: keyInput)
-                .textContentType(.password)
+            LabeledContent("Window limit") {
+                TextField("Limit", value: limit, format: .number)
+                    .multilineTextAlignment(.trailing)
+                    .frame(maxWidth: 140)
+            }
+            LabeledContent("Window used") {
+                TextField("Used", value: used, format: .number)
+                    .multilineTextAlignment(.trailing)
+                    .frame(maxWidth: 140)
+            }
 
-            HStack {
+            let remaining = max(limit.wrappedValue - used.wrappedValue, 0)
+            let pct: Int = {
+                let safe = max(limit.wrappedValue, 1)
+                return Int((Double(remaining) / Double(safe) * 100).rounded())
+            }()
+            Text("Pill shows \(pct)% remaining (\(remaining) of \(max(limit.wrappedValue, 1)) left).")
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+
+            SecureField(
+                keyPresent ? "Replace API key (Keychain)" : "API key (saved to Keychain)",
+                text: keyInput
+            )
+            .textContentType(.password)
+
+            HStack(alignment: .center, spacing: 8) {
                 Image(systemName: keyPresent ? "checkmark.seal.fill" : "key.slash")
                     .foregroundStyle(keyPresent ? Color.green : Color.secondary)
-                Text(keyPresent ? "Keychain key on file" : "No Keychain key")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(keyPresent ? "Keychain key on file" : "No Keychain key")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    if let keyPreview {
+                        Text(keyPreview)
+                            .font(.caption2.monospaced())
+                            .foregroundStyle(.secondary)
+                    }
+                }
                 Spacer()
                 if keyPresent {
                     Button("Clear key", role: .destructive) {
@@ -128,6 +168,8 @@ struct SettingsView: View {
                     .controlSize(.small)
                 }
             }
+        } header: {
+            Text(title)
         }
     }
 }

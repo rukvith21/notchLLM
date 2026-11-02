@@ -13,7 +13,7 @@
 4. Demo mock (default when `preferMockWhenUnauthenticated: true`)
 
 Key validation (optional): `GET https://generativelanguage.googleapis.com/v1beta/models?pageSize=1`.  
-Consumer “tokens remaining” is not a stable public API — rings use manual window tracking once authenticated.
+Consumer “tokens remaining” is not a stable public API — rings use the **real** manual window (`windowUsed` / `windowLimit`) once authenticated. Adapters never invent mid-range stub fractions.
 
 ## ChatGPT
 
@@ -30,8 +30,8 @@ Assumptions:
 
 - Auth in `~/Library/Application Support/Cursor/User/globalStorage/state.vscdb`
 - Safe keys: `cursorAuth/stripeMembershipType`, `stripeSubscriptionStatus`, `cachedEmail`
-- Optional live: `GET https://cursor.com/api/usage` with Bearer access token (best-effort; shape may change)
-- Falls back to membership-based manual estimate
+- Optional live (first success wins): `cursor.com/api/usage`, `www.cursor.com/api/usage`, `api2.cursor.sh/auth/usage` with Bearer access token (best-effort; shape may change)
+- Falls back to membership default limit + **real** manual `windowUsed` (no invented %)
 
 ## Settings (Phase 4)
 

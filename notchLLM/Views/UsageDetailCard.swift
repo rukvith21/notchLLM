@@ -28,18 +28,21 @@ struct UsageDetailCard: View {
                 }
             }
             .padding(.leading, 12)
-            .padding(.trailing, 14)
+            .padding(.trailing, 12)
             .padding(.vertical, 10)
             .background(
                 RoundedRectangle(cornerRadius: 10, style: .continuous)
                     .fill(Color.black)
             )
 
+            // Overlap 1pt so the tail reads as one shape with the card (no hairline gap).
             TooltipPointer()
                 .fill(Color.black)
-                .frame(width: 8, height: 14)
+                .frame(width: 7, height: 12)
                 .padding(.leading, -1)
         }
+        .compositingGroup()
+        .shadow(color: Color.black.opacity(0.55), radius: 10, x: -2, y: 3)
         .fixedSize()
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(usage.provider.usageTitle). \(subtitle)")
@@ -59,6 +62,10 @@ struct UsageDetailCard: View {
             case .unauthenticated:
                 return "Sign in to \(usage.provider.displayName) to read your usage"
             case .apiKeyPresent, .manualOnly, .authenticated:
+                if usage.usedFraction == nil {
+                    return usage.detail
+                        ?? "Signed in · no usage ledger yet"
+                }
                 if let detail = usage.detail, !detail.isEmpty {
                     return "\(usage.percentRemainingDisplay) · \(usage.resetDisplay)"
                 }

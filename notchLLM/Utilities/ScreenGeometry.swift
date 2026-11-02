@@ -35,14 +35,14 @@ struct ScreenGeometry {
     }
 
     /// Right-edge origin for the CodeNotch-style vertical pill.
-    /// Panel content keeps the slim bar on the trailing edge; the left side
-    /// of the panel is reserved for the hover tooltip.
+    /// Panel content keeps the slim bar on the trailing edge (plus a few points of
+    /// shadow bleed); the left side grows for the hover tooltip only.
     func originForPanel(size: NSSize) -> NSPoint {
         let x = frame.maxX - size.width - rightPadding
         let y = visibleFrame.midY - size.height / 2
         return NSPoint(x: x, y: y)
     }
 
-    /// Flush to the display's right edge (1pt breathing room avoids clipping).
-    private var rightPadding: CGFloat { 1 }
+    /// Flush to the display's right edge (2pt breathing room avoids shadow clip).
+    private var rightPadding: CGFloat { 2 }
 }

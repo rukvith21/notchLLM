@@ -39,7 +39,7 @@ struct CursorUsageProvider: UsageProviding {
             }
 
             let limit = max(manual.windowLimit, membershipDefaultLimit(session.membershipType))
-            let used = manual.windowUsed > 0 ? manual.windowUsed : Int(Double(limit) * 0.55)
+            let used = max(manual.windowUsed, 0)
             let plan = session.membershipType ?? manual.tier
             let status = session.subscriptionStatus ?? "unknown"
             return ProviderUsage(
@@ -51,18 +51,18 @@ struct CursorUsageProvider: UsageProviding {
                 status: .ready,
                 source: .localSession,
                 authState: .authenticated,
-                detail: "Cursor \(plan) (\(status)) · \(session.email ?? "signed in") · manual estimate"
+                detail: "Cursor \(plan) (\(status)) · \(session.email ?? "signed in") · manual window"
             )
         }
 
         if apiKey != nil, settings.manualFallbackEnabled || manual.windowLimit > 0 {
             return .manual(
                 for: .cursor,
-                used: manual.windowUsed > 0 ? manual.windowUsed : Int(Double(max(manual.windowLimit, 1)) * 0.4),
+                used: max(manual.windowUsed, 0),
                 limit: max(manual.windowLimit, 1),
                 resetsAt: manual.windowResetsAt ?? endOfLocalMonth(),
                 authState: .apiKeyPresent,
-                detail: "CURSOR_API_KEY present · live usage not wired · manual cap"
+                detail: "CURSOR_API_KEY present · live usage unavailable · manual cap"
             )
         }
 
@@ -107,69 +107,137 @@ struct CursorUsageProvider: UsageProviding {
         manual: ProviderManualConfig,
         session: CursorSessionDetector.Snapshot
     ) async -> ProviderUsage? {
-        // Best-effort; ignore non-2xx / parse failures.
-        guard let url = URL(string: "https://cursor.com/api/usage") else { return nil }
-        do {
-            let (data, response) = try await http.getJSON(
-                url: url,
-                headers: [
-                    "Authorization": "Bearer \(token)",
-                    "Accept": "application/json"
-                ]
-            )
-            guard (200..<300).contains(response.statusCode) else { return nil }
-            guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
-                return nil
+        // Best-effort endpoints; ignore non-2xx / parse failures (no login loop).
+        let candidates = [
+            "https://cursor.com/api/usage",
+            "https://www.cursor.com/api/usage",
+            "https://api2.cursor.sh/auth/usage"
+        ]
+        let headers = [
+            "Authorization": "Bearer \(token)",
+            "Accept": "application/json"
+        ]
+
+        for candidate in candidates {
+            guard let url = URL(string: candidate) else { continue }
+            do {
+                let (data, response) = try await http.getJSON(url: url, headers: headers)
+                guard (200..<300).contains(response.statusCode) else { continue }
+                guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+                    continue
+                }
+                if let parsed = parseUsageJSON(json, manual: manual, session: session) {
+                    return parsed
+                }
+            } catch {
+                continue
             }
+        }
+        return nil
+    }
 
-            // Tolerant parse across known shapes.
-            let used = intValue(json, keys: ["numRequests", "used", "requestsUsed", "totalRequests"])
-                ?? manual.windowUsed
-            let limit = intValue(json, keys: ["maxRequestUsage", "limit", "requestsLimit", "totalLimit"])
-                ?? max(manual.windowLimit, membershipDefaultLimit(session.membershipType))
-            let safeLimit = max(limit, 1)
-            let safeUsed = max(used, 0)
+    private func parseUsageJSON(
+        _ json: [String: Any],
+        manual: ProviderManualConfig,
+        session: CursorSessionDetector.Snapshot
+    ) -> ProviderUsage? {
+        let used = deepestInt(json, keys: [
+            "numRequests", "used", "requestsUsed", "totalRequests", "apiPercentUsed",
+            "premiumRequests", "numRequestsTotal"
+        ])
+        let limit = deepestInt(json, keys: [
+            "maxRequestUsage", "limit", "requestsLimit", "totalLimit", "maxRequests",
+            "premiumRequestLimit"
+        ])
 
+        // Percent-only payloads (0...100 or 0...1).
+        if used == nil, limit == nil,
+           let pct = deepestDouble(json, keys: ["usagePct", "percentUsed", "pctUsed", "apiPercentUsed"]) {
+            let fraction = pct > 1 ? min(pct / 100, 1) : min(max(pct, 0), 1)
+            let fallbackLimit = max(manual.windowLimit, membershipDefaultLimit(session.membershipType))
+            let derivedUsed = Int((fraction * Double(fallbackLimit)).rounded())
             return ProviderUsage(
                 provider: .cursor,
-                usedFraction: min(Double(safeUsed) / Double(safeLimit), 1),
-                tokensUsed: safeUsed,
-                tokensLimit: safeLimit,
+                usedFraction: fraction,
+                tokensUsed: derivedUsed,
+                tokensLimit: fallbackLimit,
                 resetsAt: dateValue(json) ?? manual.windowResetsAt ?? endOfLocalMonth(),
                 status: .ready,
                 source: .live,
                 authState: .authenticated,
                 detail: "Cursor live usage · \(session.membershipType ?? "plan")"
             )
-        } catch {
-            return nil
         }
+
+        guard used != nil || limit != nil else { return nil }
+
+        let safeLimit = max(limit ?? max(manual.windowLimit, membershipDefaultLimit(session.membershipType)), 1)
+        let safeUsed = max(used ?? manual.windowUsed, 0)
+        return ProviderUsage(
+            provider: .cursor,
+            usedFraction: min(Double(safeUsed) / Double(safeLimit), 1),
+            tokensUsed: safeUsed,
+            tokensLimit: safeLimit,
+            resetsAt: dateValue(json) ?? manual.windowResetsAt ?? endOfLocalMonth(),
+            status: .ready,
+            source: .live,
+            authState: .authenticated,
+            detail: "Cursor live usage · \(session.membershipType ?? "plan")"
+        )
     }
 
-    private func intValue(_ json: [String: Any], keys: [String]) -> Int? {
+    private func deepestInt(_ json: [String: Any], keys: [String], depth: Int = 0) -> Int? {
+        guard depth < 4 else { return nil }
         for key in keys {
             if let number = json[key] as? NSNumber { return number.intValue }
-            if let nested = json[key] as? [String: Any] {
-                if let n = nested["used"] as? NSNumber { return n.intValue }
-                if let n = nested["numRequests"] as? NSNumber { return n.intValue }
+            if let text = json[key] as? String, let value = Int(text) { return value }
+        }
+        for key in keys {
+            if let nested = json[key] as? [String: Any],
+               let found = deepestInt(nested, keys: keys, depth: depth + 1) {
+                return found
             }
         }
-        // Some payloads nest under "gpt-4" / model keys
+        // Model-keyed nests ("gpt-4", "default", …)
         for (_, value) in json {
             if let nested = value as? [String: Any],
-               let n = nested["numRequests"] as? NSNumber {
-                return n.intValue
+               let found = deepestInt(nested, keys: keys, depth: depth + 1) {
+                return found
+            }
+        }
+        return nil
+    }
+
+    private func deepestDouble(_ json: [String: Any], keys: [String], depth: Int = 0) -> Double? {
+        guard depth < 4 else { return nil }
+        for key in keys {
+            if let number = json[key] as? NSNumber { return number.doubleValue }
+            if let text = json[key] as? String, let value = Double(text) { return value }
+        }
+        for (_, value) in json {
+            if let nested = value as? [String: Any],
+               let found = deepestDouble(nested, keys: keys, depth: depth + 1) {
+                return found
             }
         }
         return nil
     }
 
     private func dateValue(_ json: [String: Any]) -> Date? {
-        let keys = ["startOfMonth", "resetDate", "resetsAt"]
+        let keys = ["startOfMonth", "resetDate", "resetsAt", "billingCycleEnd"]
+        let iso = ISO8601DateFormatter()
+        iso.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        let isoBasic = ISO8601DateFormatter()
         for key in keys {
             if let text = json[key] as? String {
-                let iso = ISO8601DateFormatter()
-                if let date = iso.date(from: text) { return date }
+                if let date = iso.date(from: text) ?? isoBasic.date(from: text) {
+                    return date
+                }
+            }
+            if let nested = json[key] as? [String: Any], let text = nested["iso"] as? String {
+                if let date = iso.date(from: text) ?? isoBasic.date(from: text) {
+                    return date
+                }
             }
         }
         return nil

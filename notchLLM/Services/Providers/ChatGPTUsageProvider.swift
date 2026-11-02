@@ -95,8 +95,9 @@ struct ChatGPTUsageProvider: UsageProviding {
         authState: ProviderAuthState,
         detail: String
     ) -> ProviderUsage {
+        // Use the real manual window only — no invented mid-range stubs.
         let limit = max(manual.windowLimit, 1)
-        let used = manual.windowUsed > 0 ? manual.windowUsed : Int(Double(limit) * 0.42)
+        let used = max(manual.windowUsed, 0)
         return ProviderUsage(
             provider: .chatGPT,
             usedFraction: min(Double(used) / Double(limit), 1),

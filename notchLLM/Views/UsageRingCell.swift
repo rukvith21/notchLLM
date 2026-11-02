@@ -1,11 +1,14 @@
 import SwiftUI
 
-/// CodeNotch-style cell: white monochrome icon in a circle, optional % underneath.
+/// CodeNotch-style cell: white monochrome icon, optional remaining ring + % underneath.
 struct UsageRingCell: View {
     let usage: ProviderUsage
     var isFocused: Bool = false
     var showsPercent: Bool = true
-    var iconSize: CGFloat = 28
+    var iconSize: CGFloat = 26
+
+    /// Warm coral used by CodeNotch for known remaining rings (see target screenshot).
+    private static let remainingRing = Color(red: 1.0, green: 0.42, blue: 0.22)
 
     private var remainingFraction: Double? {
         guard let used = usage.usedFraction else { return nil }
@@ -28,14 +31,28 @@ struct UsageRingCell: View {
     }
 
     var body: some View {
-        VStack(spacing: 4) {
+        VStack(spacing: 3) {
             ZStack {
+                // Dim track
                 Circle()
                     .strokeBorder(
-                        isFocused ? Color.white.opacity(0.55) : Color.white.opacity(0.18),
-                        lineWidth: isFocused ? 1.2 : 0.8
+                        Color.white.opacity(isFocused ? 0.28 : 0.14),
+                        lineWidth: 1.5
                     )
-                    .frame(width: iconSize, height: iconSize)
+
+                // Remaining arc when quota is known (CodeNotch coral ring).
+                if let remaining = remainingFraction {
+                    Circle()
+                        .trim(from: 0, to: remaining)
+                        .stroke(
+                            Self.remainingRing.opacity(usage.status == .ready ? 1 : 0.55),
+                            style: StrokeStyle(lineWidth: 1.8, lineCap: .round)
+                        )
+                        .rotationEffect(.degrees(-90))
+                } else if isFocused {
+                    Circle()
+                        .strokeBorder(Color.white.opacity(0.55), lineWidth: 1.1)
+                }
 
                 Image(systemName: usage.provider.systemImage)
                     .font(.system(size: iconSize * 0.42, weight: .medium))

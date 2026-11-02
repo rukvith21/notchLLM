@@ -142,15 +142,13 @@ struct GeminiUsageProvider: UsageProviding {
         authState: ProviderAuthState,
         detail: String
     ) -> ProviderUsage {
+        // Honest manual window — never invent mid-range stubs. used=0 ⇒ 100% remaining.
         let limit = max(manual.windowLimit, 1)
         let used = max(manual.windowUsed, 0)
-        // Seed a visible non-zero demo-ish used count when user hasn't filled manual yet
-        // but is authenticated — keeps rings demoable without inventing a login wall.
-        let effectiveUsed = used > 0 ? used : Int(Double(limit) * defaultFraction(for: authState))
         return ProviderUsage(
             provider: .gemini,
-            usedFraction: min(Double(effectiveUsed) / Double(limit), 1),
-            tokensUsed: effectiveUsed,
+            usedFraction: min(Double(used) / Double(limit), 1),
+            tokensUsed: used,
             tokensLimit: limit,
             resetsAt: manual.windowResetsAt ?? endOfLocalDay(),
             status: .ready,
@@ -158,15 +156,6 @@ struct GeminiUsageProvider: UsageProviding {
             authState: authState,
             detail: detail
         )
-    }
-
-    private func defaultFraction(for auth: ProviderAuthState) -> Double {
-        switch auth {
-        case .authenticated: 0.35
-        case .apiKeyPresent: 0.28
-        case .manualOnly: 0.20
-        case .unauthenticated: 0.0
-        }
     }
 
     /// Lightweight non-billing probe. Success ⇒ key works. Failure ⇒ soft degrade.
