@@ -3,10 +3,10 @@ import SQLite3
 
 /// Best-effort Cursor IDE session reader.
 ///
-/// Assumptions (documented):
+/// Assumptions:
 /// - Cursor stores auth in `~/Library/Application Support/Cursor/User/globalStorage/state.vscdb`
 /// - Useful non-secret keys: `cursorAuth/stripeMembershipType`, `stripeSubscriptionStatus`, `cachedEmail`
-/// - Access/refresh tokens exist but are only used for optional live usage API calls
+/// - Access tokens may be Electron `cursor-safe-storage:v1:` ciphertext; we decrypt via Keychain
 struct CursorSessionDetector: Sendable {
     struct Snapshot: Sendable {
         let isSignedIn: Bool
@@ -14,6 +14,7 @@ struct CursorSessionDetector: Sendable {
         let membershipType: String?
         let subscriptionStatus: String?
         let accessToken: String?
+        let authID: String?
     }
 
     private let dbURL: URL
@@ -32,14 +33,25 @@ struct CursorSessionDetector: Sendable {
                 email: nil,
                 membershipType: nil,
                 subscriptionStatus: nil,
-                accessToken: nil
+                accessToken: nil,
+                authID: nil
             )
         }
 
         let email = readString(key: "cursorAuth/cachedEmail")
         let membership = readString(key: "cursorAuth/stripeMembershipType")
         let status = readString(key: "cursorAuth/stripeSubscriptionStatus")
-        let token = readString(key: "cursorAuth/accessToken")
+        let authID = readString(key: "cursorAuth/stripeMembershipAuthId")
+            ?? profileAuthID()
+        let rawToken = readString(key: "cursorAuth/accessToken")
+        let token: String?
+        if let rawToken {
+            token = ElectronSafeStorage.decryptCursorAccessToken(rawToken) ?? (
+                rawToken.hasPrefix("cursor-safe-storage:") ? nil : rawToken
+            )
+        } else {
+            token = nil
+        }
         let signedIn = email != nil || token != nil || membership != nil
 
         return Snapshot(
@@ -47,8 +59,19 @@ struct CursorSessionDetector: Sendable {
             email: email,
             membershipType: membership,
             subscriptionStatus: status,
-            accessToken: token
+            accessToken: token,
+            authID: authID
         )
+    }
+
+    private func profileAuthID() -> String? {
+        guard let raw = readString(key: "cursorAuth/cachedScopedProfile"),
+              let data = raw.data(using: .utf8),
+              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let authId = json["authId"] as? String,
+              !authId.isEmpty
+        else { return nil }
+        return authId
     }
 
     private func readString(key: String) -> String? {

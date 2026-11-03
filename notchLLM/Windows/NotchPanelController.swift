@@ -12,7 +12,7 @@ final class NotchPanelController {
 
     /// Tracks current content size so screen changes keep the right-edge anchor.
     /// Default matches collapsed slim bar + shadow bleed (see NotchPillView).
-    private var contentSize = CGSize(width: 66, height: 190)
+    private var contentSize = CGSize(width: 62, height: 176)
 
     init(viewModel: NotchViewModel) {
         self.viewModel = viewModel

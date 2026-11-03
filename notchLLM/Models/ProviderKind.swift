@@ -1,11 +1,11 @@
 import Foundation
 import SwiftUI
 
-/// Built-in LLM usage providers. Real adapters land in Phase 3.
+/// Built-in LLM usage providers. Display order matches CodeNotch (ChatGPT → Cursor → Gemini).
 enum ProviderKind: String, CaseIterable, Identifiable, Sendable {
-    case gemini
     case chatGPT
     case cursor
+    case gemini
 
     var id: String { rawValue }
 
@@ -30,7 +30,7 @@ enum ProviderKind: String, CaseIterable, Identifiable, Sendable {
         }
     }
 
-    /// White monochrome SF Symbol stand-in for each brand.
+    /// Fallback SF Symbol when brand artwork is unavailable.
     var systemImage: String {
         switch self {
         case .gemini: "sparkles"

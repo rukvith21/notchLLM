@@ -36,6 +36,9 @@
 		A10000000000000000000021 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000021 /* SettingsView.swift */; };
 		A10000000000000000000022 /* SettingsWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000022 /* SettingsWindowController.swift */; };
 		A10000000000000000000023 /* StatusItemController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000023 /* StatusItemController.swift */; };
+		A10000000000000000000024 /* BrandIcons.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000024 /* BrandIcons.swift */; };
+		A10000000000000000000025 /* ElectronSafeStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000025 /* ElectronSafeStorage.swift */; };
+		A10000000000000000000026 /* GeminiOAuthStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000026 /* GeminiOAuthStore.swift */; };
 		A10000000000000000000011 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000011 /* Assets.xcassets */; };
 /* End PBXBuildFile section */
 
@@ -72,6 +75,9 @@
 		B10000000000000000000021 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		B10000000000000000000022 /* SettingsWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsWindowController.swift; sourceTree = "<group>"; };
 		B10000000000000000000023 /* StatusItemController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusItemController.swift; sourceTree = "<group>"; };
+		B10000000000000000000024 /* BrandIcons.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrandIcons.swift; sourceTree = "<group>"; };
+		B10000000000000000000025 /* ElectronSafeStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ElectronSafeStorage.swift; sourceTree = "<group>"; };
+		B10000000000000000000026 /* GeminiOAuthStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeminiOAuthStore.swift; sourceTree = "<group>"; };
 		B10000000000000000000013 /* notchLLM.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = notchLLM.entitlements; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -146,6 +152,7 @@
 				B10000000000000000000010 /* NotchPillView.swift */,
 				B1000000000000000000000F /* UsageRingCell.swift */,
 				B10000000000000000000014 /* UsageDetailCard.swift */,
+				B10000000000000000000024 /* BrandIcons.swift */,
 				B10000000000000000000021 /* SettingsView.swift */,
 			);
 			path = Views;
@@ -217,6 +224,8 @@
 				B1000000000000000000001A /* GeminiSessionDetector.swift */,
 				B1000000000000000000001B /* CursorSessionDetector.swift */,
 				B1000000000000000000001C /* ChatGPTSessionDetector.swift */,
+				B10000000000000000000025 /* ElectronSafeStorage.swift */,
+				B10000000000000000000026 /* GeminiOAuthStore.swift */,
 			);
 			path = Credentials;
 			sourceTree = "<group>";
@@ -327,6 +336,9 @@
 				A10000000000000000000021 /* SettingsView.swift in Sources */,
 				A10000000000000000000022 /* SettingsWindowController.swift in Sources */,
 				A10000000000000000000023 /* StatusItemController.swift in Sources */,
+				A10000000000000000000024 /* BrandIcons.swift in Sources */,
+				A10000000000000000000025 /* ElectronSafeStorage.swift in Sources */,
+				A10000000000000000000026 /* GeminiOAuthStore.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

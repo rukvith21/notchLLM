@@ -7,6 +7,8 @@ import Observation
 final class SettingsViewModel {
     var preferMockWhenUnauthenticated = true
     var manualFallbackEnabled = true
+    /// 0 = off; otherwise refresh every N seconds.
+    var autoRefreshSeconds = 60
 
     var geminiTier = "pro"
     var geminiLimit = 1_000_000
@@ -33,6 +35,14 @@ final class SettingsViewModel {
     var isSaving = false
     var isLoading = false
 
+    static let autoRefreshChoices: [(label: String, seconds: Int)] = [
+        ("Off", 0),
+        ("30 seconds", 30),
+        ("1 minute", 60),
+        ("2 minutes", 120),
+        ("5 minutes", 300)
+    ]
+
     private let settingsStore: any SettingsStoring
     private let credentials: CredentialStore
 
@@ -51,6 +61,7 @@ final class SettingsViewModel {
         let settings = await settingsStore.load()
         preferMockWhenUnauthenticated = settings.preferMockWhenUnauthenticated
         manualFallbackEnabled = settings.manualFallbackEnabled
+        autoRefreshSeconds = max(settings.autoRefreshSeconds, 0)
 
         let gemini = settings.config(for: .gemini)
         geminiTier = gemini.tier
@@ -88,6 +99,7 @@ final class SettingsViewModel {
         var settings = await settingsStore.load()
         settings.preferMockWhenUnauthenticated = preferMockWhenUnauthenticated
         settings.manualFallbackEnabled = manualFallbackEnabled
+        settings.autoRefreshSeconds = max(autoRefreshSeconds, 0)
 
         var gemini = settings.config(for: .gemini)
         gemini.tier = geminiTier.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "pro" : geminiTier
@@ -134,7 +146,8 @@ final class SettingsViewModel {
             geminiAPIKeyInput = ""
             chatGPTAPIKeyInput = ""
             cursorAPIKeyInput = ""
-            statusMessage = "Saved — Keychain + caps updated · rings refreshing…"
+            let refreshLabel = autoRefreshSeconds == 0 ? "auto-refresh off" : "auto-refresh \(autoRefreshSeconds)s"
+            statusMessage = "Saved — Keychain + caps updated · \(refreshLabel) · rings refreshing…"
             NotificationCenter.default.post(name: .notchLLMSettingsDidChange, object: nil)
         } catch {
             statusMessage = "Save failed: \(error.localizedDescription)"

@@ -1,11 +1,11 @@
 import Foundation
 
-/// ChatGPT / Codex adapter (best-effort).
+/// ChatGPT / Codex adapter — prefers live `wham/usage` over manual stubs.
 ///
-/// Assumptions:
-/// - `~/.codex/auth.json` indicates an authenticated OpenAI/Codex account
-/// - ChatGPT Atlas does not publish a stable local usage ledger we can read
-/// - Live usage APIs vary by plan; we fall back to manual caps + mock
+/// Auth resolution:
+/// 1. Codex `~/.codex/auth.json` → live `GET chatgpt.com/backend-api/wham/usage`
+/// 2. `OPENAI_API_KEY` / Keychain probe + manual window
+/// 3. Manual caps / demo mock
 struct ChatGPTUsageProvider: UsageProviding {
     let kind: ProviderKind = .chatGPT
 
@@ -32,12 +32,16 @@ struct ChatGPTUsageProvider: UsageProviding {
         let session = sessionDetector.detect()
         let apiKey = await credentials.openAIAPIKey()
 
-        if session.isAuthenticated {
+        if session.isAuthenticated, let token = session.accessToken {
+            if let live = await fetchWhamUsage(token: token, accountID: session.accountID, manual: manual) {
+                return live
+            }
+            // Session present but live call failed — still authenticated, no login loop.
             return compose(
                 manual: manual,
                 source: .localSession,
                 authState: .authenticated,
-                detail: "Codex session (\(session.accountID ?? session.authMode ?? "active")) · manual tracking"
+                detail: "Codex session (\(session.accountID ?? session.authMode ?? "active")) · live usage unavailable · manual window"
             )
         }
 
@@ -89,13 +93,107 @@ struct ChatGPTUsageProvider: UsageProviding {
         )
     }
 
+    // MARK: - Live wham/usage
+
+    private func fetchWhamUsage(
+        token: String,
+        accountID: String?,
+        manual: ProviderManualConfig
+    ) async -> ProviderUsage? {
+        let candidates = [
+            "https://chatgpt.com/backend-api/wham/usage",
+            "https://chatgpt.com/backend-api/wham/usage?cedar_ember=1"
+        ]
+        var headers = [
+            "Authorization": "Bearer \(token)",
+            "Accept": "application/json",
+            "User-Agent": "codex-cli",
+            "Origin": "https://chatgpt.com",
+            "Referer": "https://chatgpt.com/"
+        ]
+        if let accountID, !accountID.isEmpty {
+            headers["ChatGPT-Account-ID"] = accountID
+        }
+
+        for candidate in candidates {
+            guard let url = URL(string: candidate) else { continue }
+            do {
+                let (data, response) = try await http.getJSON(url: url, headers: headers)
+                guard (200..<300).contains(response.statusCode),
+                      let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
+                      let parsed = parseWhamJSON(json, manual: manual)
+                else { continue }
+                return parsed
+            } catch {
+                continue
+            }
+        }
+        return nil
+    }
+
+    private func parseWhamJSON(_ json: [String: Any], manual: ProviderManualConfig) -> ProviderUsage? {
+        let plan = (json["plan_type"] as? String) ?? manual.tier
+        let rate = json["rate_limit"] as? [String: Any]
+        let windows = [rate?["primary_window"], rate?["secondary_window"]]
+            .compactMap { $0 as? [String: Any] }
+
+        // Prefer the most constrained window (highest used_percent).
+        var bestUsedPercent: Double?
+        var bestReset: Date?
+        var bestWindowSeconds: Int?
+        for window in windows {
+            let used: Double?
+            if let number = window["used_percent"] as? NSNumber {
+                used = number.doubleValue
+            } else if let text = window["used_percent"] as? String {
+                used = Double(text)
+            } else {
+                used = nil
+            }
+            guard let used else { continue }
+            if bestUsedPercent == nil || used > (bestUsedPercent ?? -1) {
+                bestUsedPercent = used
+                bestWindowSeconds = (window["limit_window_seconds"] as? NSNumber)?.intValue
+                if let resetAt = window["reset_at"] as? NSNumber {
+                    bestReset = Date(timeIntervalSince1970: resetAt.doubleValue)
+                } else if let after = window["reset_after_seconds"] as? NSNumber {
+                    bestReset = Date().addingTimeInterval(after.doubleValue)
+                }
+            }
+        }
+
+        guard let usedPercent = bestUsedPercent else { return nil }
+        let usedFraction = min(max(usedPercent / 100.0, 0), 1)
+        let fallbackLimit = max(manual.windowLimit, 100)
+        let derivedUsed = Int((usedFraction * Double(fallbackLimit)).rounded())
+        let windowLabel: String = {
+            switch bestWindowSeconds {
+            case 18_000: return "5h"
+            case 604_800: return "7d"
+            case let seconds?: return "\(seconds)s"
+            default: return "window"
+            }
+        }()
+
+        return ProviderUsage(
+            provider: .chatGPT,
+            usedFraction: usedFraction,
+            tokensUsed: derivedUsed,
+            tokensLimit: fallbackLimit,
+            resetsAt: bestReset ?? manual.windowResetsAt ?? endOfLocalDay(),
+            status: .ready,
+            source: .live,
+            authState: .authenticated,
+            detail: "ChatGPT \(plan) · live \(windowLabel) · \(Int((1 - usedFraction) * 100))% left"
+        )
+    }
+
     private func compose(
         manual: ProviderManualConfig,
         source: UsageSource,
         authState: ProviderAuthState,
         detail: String
     ) -> ProviderUsage {
-        // Use the real manual window only — no invented mid-range stubs.
         let limit = max(manual.windowLimit, 1)
         let used = max(manual.windowUsed, 0)
         return ProviderUsage(

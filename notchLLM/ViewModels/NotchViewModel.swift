@@ -1,23 +1,31 @@
 import Foundation
 import Observation
 
-/// Drives the notch pill. Observes settings changes so rings refresh without restart.
+/// Drives the notch pill. Observes settings changes and optional auto-refresh timer.
 @MainActor
 @Observable
 final class NotchViewModel {
     private(set) var usages: [ProviderUsage]
     private(set) var isRefreshing = false
     private(set) var lastError: String?
+    private(set) var lastRefreshedAt: Date?
+    private(set) var autoRefreshSeconds: Int = 60
 
     var isExpanded = false
     var focusedProvider: ProviderKind?
 
     private let aggregator: UsageAggregator
+    private let settingsStore: any SettingsStoring
     /// Stored as nonisolated so `deinit` can clear it without MainActor hops.
     nonisolated(unsafe) private var settingsObserver: NSObjectProtocol?
+    private var refreshTask: Task<Void, Never>?
 
-    init(aggregator: UsageAggregator = UsageAggregator()) {
+    init(
+        aggregator: UsageAggregator = UsageAggregator(),
+        settingsStore: any SettingsStoring = FileSettingsStore.shared
+    ) {
         self.aggregator = aggregator
+        self.settingsStore = settingsStore
         self.usages = ProviderKind.allCases.map { kind in
             ProviderUsage(
                 provider: kind,
@@ -41,12 +49,16 @@ final class NotchViewModel {
             queue: .main
         ) { [weak self] _ in
             Task { @MainActor in
+                await self?.reloadAutoRefreshPreference()
                 await self?.refresh()
             }
         }
+        Task { await reloadAutoRefreshPreference() }
     }
 
     func stopObservingSettingsChanges() {
+        refreshTask?.cancel()
+        refreshTask = nil
         if let settingsObserver {
             NotificationCenter.default.removeObserver(settingsObserver)
             self.settingsObserver = nil
@@ -75,12 +87,14 @@ final class NotchViewModel {
 
         let next = await aggregator.refreshAll()
         usages = next
+        lastRefreshedAt = Date()
         if let firstError = next.first(where: {
             if case .error = $0.status { return true }
             return false
         }) {
             lastError = firstError.detail
         }
+        scheduleAutoRefresh()
     }
 
     func setExpanded(_ expanded: Bool) {
@@ -94,6 +108,26 @@ final class NotchViewModel {
         focusedProvider = provider
         if provider != nil {
             isExpanded = true
+        }
+    }
+
+    // MARK: - Auto-refresh
+
+    private func reloadAutoRefreshPreference() async {
+        let settings = await settingsStore.load()
+        autoRefreshSeconds = max(settings.autoRefreshSeconds, 0)
+        scheduleAutoRefresh()
+    }
+
+    private func scheduleAutoRefresh() {
+        refreshTask?.cancel()
+        refreshTask = nil
+        let seconds = autoRefreshSeconds
+        guard seconds > 0 else { return }
+        refreshTask = Task { [weak self] in
+            try? await Task.sleep(for: .seconds(seconds))
+            guard !Task.isCancelled else { return }
+            await self?.refresh()
         }
     }
 

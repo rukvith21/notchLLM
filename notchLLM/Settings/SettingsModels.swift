@@ -4,11 +4,14 @@ struct NotchLLMSettings: Codable, Equatable, Sendable {
     var preferMockWhenUnauthenticated: Bool
     /// When true, adapters use per-provider windowLimit/windowUsed if live data is missing.
     var manualFallbackEnabled: Bool
+    /// Auto-refresh interval in seconds. `0` disables the timer (manual / settings-change only).
+    var autoRefreshSeconds: Int
     var providers: [String: ProviderManualConfig]
 
     static let `default` = NotchLLMSettings(
         preferMockWhenUnauthenticated: true,
         manualFallbackEnabled: true,
+        autoRefreshSeconds: 60,
         providers: [
             ProviderKind.gemini.rawValue: .geminiDefault,
             ProviderKind.chatGPT.rawValue: .chatGPTDefault,
@@ -27,16 +30,19 @@ struct NotchLLMSettings: Codable, Equatable, Sendable {
     enum CodingKeys: String, CodingKey {
         case preferMockWhenUnauthenticated
         case manualFallbackEnabled
+        case autoRefreshSeconds
         case providers
     }
 
     init(
         preferMockWhenUnauthenticated: Bool,
         manualFallbackEnabled: Bool,
+        autoRefreshSeconds: Int,
         providers: [String: ProviderManualConfig]
     ) {
         self.preferMockWhenUnauthenticated = preferMockWhenUnauthenticated
         self.manualFallbackEnabled = manualFallbackEnabled
+        self.autoRefreshSeconds = autoRefreshSeconds
         self.providers = providers
     }
 
@@ -44,8 +50,17 @@ struct NotchLLMSettings: Codable, Equatable, Sendable {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         preferMockWhenUnauthenticated = try container.decodeIfPresent(Bool.self, forKey: .preferMockWhenUnauthenticated) ?? true
         manualFallbackEnabled = try container.decodeIfPresent(Bool.self, forKey: .manualFallbackEnabled) ?? true
+        autoRefreshSeconds = try container.decodeIfPresent(Int.self, forKey: .autoRefreshSeconds) ?? 60
         providers = try container.decodeIfPresent([String: ProviderManualConfig].self, forKey: .providers)
             ?? NotchLLMSettings.default.providers
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(preferMockWhenUnauthenticated, forKey: .preferMockWhenUnauthenticated)
+        try container.encode(manualFallbackEnabled, forKey: .manualFallbackEnabled)
+        try container.encode(autoRefreshSeconds, forKey: .autoRefreshSeconds)
+        try container.encode(providers, forKey: .providers)
     }
 }
 

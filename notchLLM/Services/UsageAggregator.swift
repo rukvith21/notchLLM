@@ -5,10 +5,11 @@ actor UsageAggregator: UsageAggregating {
     private let providers: [any UsageProviding]
 
     init(providers: [any UsageProviding]? = nil) {
+        // Match ProviderKind display order (ChatGPT → Cursor → Gemini).
         self.providers = providers ?? [
-            GeminiUsageProvider(),
             ChatGPTUsageProvider(),
-            CursorUsageProvider()
+            CursorUsageProvider(),
+            GeminiUsageProvider()
         ]
     }
 

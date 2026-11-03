@@ -7,12 +7,10 @@ struct UsageDetailCard: View {
     var body: some View {
         HStack(alignment: .center, spacing: 0) {
             HStack(alignment: .top, spacing: 8) {
-                Image(systemName: usage.provider.systemImage)
-                    .font(.system(size: 12, weight: .semibold))
+                BrandIcon.view(for: usage.provider)
+                    .frame(width: 14, height: 14)
                     .foregroundStyle(Color.white.opacity(0.95))
-                    .symbolRenderingMode(.monochrome)
-                    .frame(width: 16, height: 16)
-                    .padding(.top, 1)
+                    .padding(.top, 2)
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(usage.provider.usageTitle)
@@ -66,7 +64,10 @@ struct UsageDetailCard: View {
                     return usage.detail
                         ?? "Signed in · no usage ledger yet"
                 }
-                if let detail = usage.detail, !detail.isEmpty {
+                if usage.source == .live {
+                    return usage.detail ?? "\(usage.percentRemainingDisplay) remaining · \(usage.resetDisplay)"
+                }
+                if let detail = usage.detail, !detail.isEmpty, usage.source != .manual {
                     return "\(usage.percentRemainingDisplay) · \(usage.resetDisplay)"
                 }
                 return "\(usage.percentRemainingDisplay) remaining · \(usage.resetDisplay)"

@@ -5,11 +5,11 @@ struct NotchPillView: View {
     @Bindable var viewModel: NotchViewModel
     var onContentSizeChange: ((CGSize) -> Void)?
 
-    /// Slim bar width hugging the screen edge.
-    private let barWidth: CGFloat = 48
-    private let cellHeight: CGFloat = 50
-    private let barVerticalPadding: CGFloat = 8
-    private let tooltipGap: CGFloat = 8
+    /// Slim bar width hugging the screen edge (CodeNotch target ~44–48pt).
+    private let barWidth: CGFloat = 44
+    private let cellHeight: CGFloat = 46
+    private let barVerticalPadding: CGFloat = 7
+    private let tooltipGap: CGFloat = 6
     private let tooltipColumnWidth: CGFloat = 228
     /// Extra panel padding so soft shadows / tails are not clipped by the NSPanel.
     private let shadowBleedLeading: CGFloat = 14
@@ -66,8 +66,8 @@ struct NotchPillView: View {
 
                 if index < viewModel.usages.count - 1 {
                     Capsule()
-                        .fill(Color.white.opacity(0.22))
-                        .frame(width: 12, height: 1)
+                        .fill(Color.white.opacity(0.20))
+                        .frame(width: 11, height: 1)
                         .frame(maxWidth: .infinity)
                 }
             }
@@ -77,9 +77,13 @@ struct NotchPillView: View {
         .background {
             Capsule(style: .continuous)
                 .fill(Color.black)
+                .overlay {
+                    Capsule(style: .continuous)
+                        .strokeBorder(Color.white.opacity(0.08), lineWidth: 0.5)
+                }
         }
         .compositingGroup()
-        .shadow(color: Color.black.opacity(0.5), radius: 10, x: -2, y: 4)
+        .shadow(color: Color.black.opacity(0.45), radius: 9, x: -2, y: 3)
         .onHover { hovering in
             viewModel.setExpanded(hovering)
             if hovering, viewModel.focusedProvider == nil {
@@ -121,7 +125,7 @@ struct NotchPillView: View {
                 usage: usage,
                 isFocused: viewModel.focusedProvider == usage.provider,
                 showsPercent: true,
-                iconSize: 26
+                iconSize: 24
             )
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .contentShape(Rectangle())

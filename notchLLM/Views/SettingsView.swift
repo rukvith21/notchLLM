@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Lightweight preferences window for API keys + manual fallback caps.
+/// Lightweight preferences window for API keys + manual fallback caps + auto-refresh.
 struct SettingsView: View {
     @Bindable var viewModel: SettingsViewModel
 
@@ -12,26 +12,24 @@ struct SettingsView: View {
                 Section("General") {
                     Toggle("Prefer demo mock when unsigned-in", isOn: $viewModel.preferMockWhenUnauthenticated)
                     Toggle("Enable manual fallback token caps", isOn: $viewModel.manualFallbackEnabled)
+
+                    Picker("Auto-refresh", selection: $viewModel.autoRefreshSeconds) {
+                        ForEach(SettingsViewModel.autoRefreshChoices, id: \.seconds) { choice in
+                            Text(choice.label).tag(choice.seconds)
+                        }
+                    }
+                    Text(autoRefreshHelp)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+
                     Text("Caps live in ~/Library/Application Support/notchLLM/settings.json. API keys go only to Keychain (service notchLLM) — never into the JSON file.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
 
                 providerSection(
-                    title: "Gemini",
-                    hint: "No login loop — local Gemini session or API key is enough.",
-                    tier: $viewModel.geminiTier,
-                    limit: $viewModel.geminiLimit,
-                    used: $viewModel.geminiUsed,
-                    keyInput: $viewModel.geminiAPIKeyInput,
-                    keyPresent: viewModel.geminiKeyPresent,
-                    keyPreview: viewModel.geminiKeyPreview,
-                    kind: .gemini
-                )
-
-                providerSection(
                     title: "ChatGPT / OpenAI",
-                    hint: "Uses Codex ~/.codex/auth.json or OPENAI_API_KEY + manual window.",
+                    hint: "Live Codex wham/usage when ~/.codex/auth.json is present; else OPENAI_API_KEY + manual window.",
                     tier: $viewModel.chatGPTTier,
                     limit: $viewModel.chatGPTLimit,
                     used: $viewModel.chatGPTUsed,
@@ -43,7 +41,7 @@ struct SettingsView: View {
 
                 providerSection(
                     title: "Cursor",
-                    hint: "Reads Cursor state.vscdb; live /api/usage when a token is present.",
+                    hint: "Decrypts Cursor safe-storage token and reads dashboard get-current-period-usage.",
                     tier: $viewModel.cursorTier,
                     limit: $viewModel.cursorLimit,
                     used: $viewModel.cursorUsed,
@@ -52,14 +50,33 @@ struct SettingsView: View {
                     keyPreview: viewModel.cursorKeyPreview,
                     kind: .cursor
                 )
+
+                providerSection(
+                    title: "Gemini",
+                    hint: "No login loop — jetski/Antigravity OAuth or local Gemini session; live Cloud Code quota when possible.",
+                    tier: $viewModel.geminiTier,
+                    limit: $viewModel.geminiLimit,
+                    used: $viewModel.geminiUsed,
+                    keyInput: $viewModel.geminiAPIKeyInput,
+                    keyPresent: viewModel.geminiKeyPresent,
+                    keyPreview: viewModel.geminiKeyPreview,
+                    kind: .gemini
+                )
             }
             .formStyle(.grouped)
             .disabled(viewModel.isLoading || viewModel.isSaving)
 
             footer
         }
-        .frame(minWidth: 500, idealWidth: 540, minHeight: 620)
+        .frame(minWidth: 520, idealWidth: 560, minHeight: 680)
         .task { await viewModel.load() }
+    }
+
+    private var autoRefreshHelp: String {
+        if viewModel.autoRefreshSeconds == 0 {
+            return "Rings refresh only when you click Refresh or save settings."
+        }
+        return "Rings poll live adapters every \(viewModel.autoRefreshSeconds)s while notchLLM is running."
     }
 
     private var header: some View {
@@ -67,7 +84,7 @@ struct SettingsView: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text("notchLLM Settings")
                     .font(.title2.weight(.semibold))
-                Text("Keychain API keys & manual usage caps")
+                Text("Live usage, Keychain keys & manual caps")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
             }
@@ -137,7 +154,7 @@ struct SettingsView: View {
                 let safe = max(limit.wrappedValue, 1)
                 return Int((Double(remaining) / Double(safe) * 100).rounded())
             }()
-            Text("Pill shows \(pct)% remaining (\(remaining) of \(max(limit.wrappedValue, 1)) left).")
+            Text("Manual fallback shows \(pct)% remaining (\(remaining) of \(max(limit.wrappedValue, 1)) left) when live data is missing.")
                 .font(.caption2)
                 .foregroundStyle(.secondary)
 
