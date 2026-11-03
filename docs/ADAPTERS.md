@@ -7,7 +7,8 @@
 1. Live OAuth quota when local tokens exist  
    - `~/.gemini/jetski-standalone-oauth-token` (Antigravity)  
    - `~/.gemini/oauth_creds.json` (Gemini CLI)  
-   - Refresh via public Antigravity / Gemini CLI OAuth clients  
+   - Uses a still-valid access token as-is (no login)  
+   - Optional refresh via env (`NOTCHLLM_ANTIGRAVITY_CLIENT_ID/SECRET`, `NOTCHLLM_GEMINI_CLI_CLIENT_ID/SECRET`) or `~/Library/Application Support/notchLLM/oauth-clients.json`  
    - `POST https://cloudcode-pa.googleapis.com/v1internal:retrieveUserQuotaSummary` (and `retrieveUserQuota`)
 2. Local Gemini MacOS session  
    - `~/Library/Application Support/com.google.GeminiMacOS/account_config`  
