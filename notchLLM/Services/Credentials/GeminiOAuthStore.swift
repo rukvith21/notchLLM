@@ -6,11 +6,8 @@ import Foundation
 /// 1. `~/.gemini/jetski-standalone-oauth-token` (Antigravity / CodeNotch bridge)
 /// 2. `~/.gemini/oauth_creds.json` (Gemini CLI)
 ///
-/// Access tokens that are still valid are used as-is (no refresh, no login).
-/// Refresh requires OAuth client material from the environment:
-/// - `NOTCHLLM_ANTIGRAVITY_CLIENT_ID` / `NOTCHLLM_ANTIGRAVITY_CLIENT_SECRET`
-/// - `NOTCHLLM_GEMINI_CLI_CLIENT_ID` / `NOTCHLLM_GEMINI_CLI_CLIENT_SECRET`
-///
+/// Access tokens are tried against Cloud Code quota first (no login).
+/// Refresh only runs when the quota call returns 401 and client material exists.
 /// Failures degrade silently — adapters never enter a login loop.
 struct GeminiOAuthStore: Sendable {
     struct TokenBundle: Sendable {
@@ -31,11 +28,11 @@ struct GeminiOAuthStore: Sendable {
     }
 
     func resolveAccessToken() async -> TokenBundle? {
-        if let jetski = loadJetski(), let refreshed = await ensureFresh(jetski) {
-            return refreshed
+        if let jetski = loadJetski(), let usable = await ensureUsable(jetski) {
+            return usable
         }
-        if let cli = loadGeminiCLICreds(), let refreshed = await ensureFresh(cli) {
-            return refreshed
+        if let cli = loadGeminiCLICreds(), let usable = await ensureUsable(cli) {
+            return usable
         }
         return nil
     }
@@ -69,45 +66,63 @@ struct GeminiOAuthStore: Sendable {
         )
     }
 
-    // MARK: - Refresh
+    // MARK: - Freshness
 
-    private func ensureFresh(_ bundle: TokenBundle) async -> TokenBundle? {
-        if await probeToken(bundle.accessToken) {
+    /// Prefer the existing access token. Only refresh after a 401 probe against Cloud Code.
+    /// Never opens a browser / login UI.
+    private func ensureUsable(_ bundle: TokenBundle) async -> TokenBundle? {
+        switch await probeCloudCode(bundle.accessToken) {
+        case .ok, .other:
+            // Token accepted, or non-auth failure — caller still tries quota with it.
             return bundle
+        case .unauthorized:
+            break
         }
+
         guard let refresh = bundle.refreshToken, !refresh.isEmpty else {
+            // Access token rejected and no refresh — don't return a known-dead token.
             return nil
         }
 
-        var clients: [(String, String, String)] = []
-        if let id = env("NOTCHLLM_ANTIGRAVITY_CLIENT_ID"),
-           let secret = env("NOTCHLLM_ANTIGRAVITY_CLIENT_SECRET") {
-            clients.append(("antigravity", id, secret))
-        }
-        if let id = env("NOTCHLLM_GEMINI_CLI_CLIENT_ID"),
-           let secret = env("NOTCHLLM_GEMINI_CLI_CLIENT_SECRET") {
-            clients.append(("gemini-cli", id, secret))
-        }
-        // Soft discovery from local Antigravity install metadata (never baked into the binary).
-        clients.append(contentsOf: discoverLocalOAuthClients())
-
-        for (name, clientID, secret) in clients {
-            if let access = await refreshAccessToken(refreshToken: refresh, clientID: clientID, clientSecret: secret) {
-                return TokenBundle(accessToken: access, refreshToken: refresh, source: "\(bundle.source)+\(name)-refresh")
+        for (name, clientID, secret) in oauthClients() {
+            if let access = await refreshAccessToken(
+                refreshToken: refresh,
+                clientID: clientID,
+                clientSecret: secret
+            ) {
+                return TokenBundle(
+                    accessToken: access,
+                    refreshToken: refresh,
+                    source: "\(bundle.source)+\(name)-refresh"
+                )
             }
         }
         return nil
     }
 
-    private func probeToken(_ accessToken: String) async -> Bool {
-        guard let encoded = accessToken.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
-              let url = URL(string: "https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=\(encoded)")
-        else { return false }
+    private enum ProbeResult {
+        case ok
+        case unauthorized
+        case other
+    }
+
+    /// Lightweight auth check against a Cloud Code endpoint (same family as quota).
+    private func probeCloudCode(_ accessToken: String) async -> ProbeResult {
+        guard let url = URL(string: "https://cloudcode-pa.googleapis.com/v1internal:retrieveUserQuotaSummary")
+        else { return .other }
+        let headers = [
+            "Authorization": "Bearer \(accessToken)",
+            "Content-Type": "application/json",
+            "User-Agent": "antigravity/1.11.3 Darwin/arm64",
+            "Accept": "application/json"
+        ]
         do {
-            let (_, response) = try await http.getJSON(url: url)
-            return (200..<300).contains(response.statusCode)
+            let (_, response) = try await http.postJSON(url: url, headers: headers, body: Data("{}".utf8))
+            if (200..<300).contains(response.statusCode) { return .ok }
+            if response.statusCode == 401 || response.statusCode == 403 { return .unauthorized }
+            return .other
         } catch {
-            return false
+            return .other
         }
     }
 
@@ -130,6 +145,20 @@ struct GeminiOAuthStore: Sendable {
         } catch {
             return nil
         }
+    }
+
+    private func oauthClients() -> [(String, String, String)] {
+        var clients: [(String, String, String)] = []
+        if let id = env("NOTCHLLM_ANTIGRAVITY_CLIENT_ID"),
+           let secret = env("NOTCHLLM_ANTIGRAVITY_CLIENT_SECRET") {
+            clients.append(("antigravity", id, secret))
+        }
+        if let id = env("NOTCHLLM_GEMINI_CLI_CLIENT_ID"),
+           let secret = env("NOTCHLLM_GEMINI_CLI_CLIENT_SECRET") {
+            clients.append(("gemini-cli", id, secret))
+        }
+        clients.append(contentsOf: discoverLocalOAuthClients())
+        return clients
     }
 
     /// Best-effort: pull client id/secret pairs from a local notchLLM oauth helpers file if present.

@@ -43,6 +43,6 @@ struct ScreenGeometry {
         return NSPoint(x: x, y: y)
     }
 
-    /// Flush to the display's right edge (2pt breathing room avoids shadow clip).
-    private var rightPadding: CGFloat { 2 }
+    /// Flush to the display's right edge (1pt breathing room avoids shadow clip).
+    private var rightPadding: CGFloat { 1 }
 }

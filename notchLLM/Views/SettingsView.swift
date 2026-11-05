@@ -10,7 +10,7 @@ struct SettingsView: View {
             Divider()
             Form {
                 Section("General") {
-                    Toggle("Prefer demo mock when unsigned-in", isOn: $viewModel.preferMockWhenUnauthenticated)
+                    Toggle("Show demo percentages when unsigned-in", isOn: $viewModel.preferMockWhenUnauthenticated)
                     Toggle("Enable manual fallback token caps", isOn: $viewModel.manualFallbackEnabled)
 
                     Picker("Auto-refresh", selection: $viewModel.autoRefreshSeconds) {
@@ -18,11 +18,20 @@ struct SettingsView: View {
                             Text(choice.label).tag(choice.seconds)
                         }
                     }
+                    .onChange(of: viewModel.autoRefreshSeconds) { _, _ in
+                        Task { await viewModel.persistAutoRefreshOnly() }
+                    }
+
                     Text(autoRefreshHelp)
                         .font(.caption)
                         .foregroundStyle(.secondary)
 
-                    Text("Caps live in ~/Library/Application Support/notchLLM/settings.json. API keys go only to Keychain (service notchLLM) — never into the JSON file.")
+                    Button("Refresh usage now") {
+                        viewModel.requestRefreshNow()
+                    }
+                    .disabled(viewModel.isLoading || viewModel.isSaving)
+
+                    Text("Caps live in ~/Library/Application Support/notchLLM/settings.json. API keys go only to Keychain (service notchLLM) — never into the JSON file. Demo mocks stay off unless you opt in above.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -68,15 +77,15 @@ struct SettingsView: View {
 
             footer
         }
-        .frame(minWidth: 520, idealWidth: 560, minHeight: 680)
+        .frame(minWidth: 520, idealWidth: 560, minHeight: 700)
         .task { await viewModel.load() }
     }
 
     private var autoRefreshHelp: String {
         if viewModel.autoRefreshSeconds == 0 {
-            return "Rings refresh only when you click Refresh or save settings."
+            return "Rings refresh only when you click Refresh or save settings. Auto-refresh saves immediately."
         }
-        return "Rings poll live adapters every \(viewModel.autoRefreshSeconds)s while notchLLM is running."
+        return "Rings poll live adapters every \(viewModel.autoRefreshSeconds)s while notchLLM is running. Interval saves immediately."
     }
 
     private var header: some View {

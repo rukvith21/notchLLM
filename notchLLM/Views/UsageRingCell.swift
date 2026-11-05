@@ -5,10 +5,10 @@ struct UsageRingCell: View {
     let usage: ProviderUsage
     var isFocused: Bool = false
     var showsPercent: Bool = true
-    var iconSize: CGFloat = 24
+    var iconSize: CGFloat = 26
 
     /// Warm coral used by CodeNotch for known remaining rings (see target screenshot).
-    private static let remainingRing = Color(red: 1.0, green: 0.42, blue: 0.22)
+    private static let remainingRing = Color(red: 1.0, green: 0.45, blue: 0.20)
 
     private var remainingFraction: Double? {
         guard let used = usage.usedFraction else { return nil }
@@ -17,7 +17,7 @@ struct UsageRingCell: View {
 
     private var percentLabel: String {
         guard let remaining = remainingFraction, usage.status == .ready || usage.status == .loading else {
-            return "—"
+            return "–"
         }
         return "\(Int((remaining * 100).rounded()))%"
     }
@@ -25,19 +25,19 @@ struct UsageRingCell: View {
     private var iconOpacity: Double {
         switch usage.status {
         case .loading: 0.55
-        case .unavailable, .error: 0.45
+        case .unavailable, .error: 0.48
         case .ready: 1.0
         }
     }
 
     var body: some View {
-        VStack(spacing: 2) {
+        VStack(spacing: 3) {
             ZStack {
-                // Dim track
+                // Dim track — always present so focused + unknown still read as a ring.
                 Circle()
                     .strokeBorder(
-                        Color.white.opacity(isFocused ? 0.30 : 0.12),
-                        lineWidth: 1.35
+                        Color.white.opacity(isFocused ? 0.28 : 0.10),
+                        lineWidth: 1.25
                     )
 
                 // Remaining arc when quota is known (CodeNotch coral ring).
@@ -46,16 +46,16 @@ struct UsageRingCell: View {
                         .trim(from: 0, to: remaining)
                         .stroke(
                             Self.remainingRing.opacity(usage.status == .ready ? 1 : 0.55),
-                            style: StrokeStyle(lineWidth: 1.65, lineCap: .round)
+                            style: StrokeStyle(lineWidth: 1.55, lineCap: .round)
                         )
                         .rotationEffect(.degrees(-90))
                 } else if isFocused {
                     Circle()
-                        .strokeBorder(Color.white.opacity(0.55), lineWidth: 1.05)
+                        .strokeBorder(Color.white.opacity(0.50), lineWidth: 1.0)
                 }
 
                 BrandIcon.view(for: usage.provider)
-                    .frame(width: iconSize * 0.52, height: iconSize * 0.52)
+                    .frame(width: iconSize * 0.50, height: iconSize * 0.50)
                     .foregroundStyle(Color.white.opacity(0.95))
             }
             .opacity(iconOpacity)
@@ -63,8 +63,8 @@ struct UsageRingCell: View {
 
             if showsPercent {
                 Text(percentLabel)
-                    .font(.system(size: 8.5, weight: .medium, design: .rounded))
-                    .foregroundStyle(Color.white.opacity(0.90))
+                    .font(.system(size: 8.25, weight: .medium, design: .rounded))
+                    .foregroundStyle(Color.white.opacity(0.92))
                     .monospacedDigit()
                     .frame(height: 10)
             }

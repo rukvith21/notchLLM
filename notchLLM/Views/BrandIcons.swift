@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// CodeNotch-style monochrome brand marks (path approximations of ChatGPT / Cursor / Gemini).
+/// CodeNotch-style monochrome brand marks (ChatGPT blossom / Cursor caret / Gemini sparkle).
 enum BrandIcon {
     @ViewBuilder
     static func view(for kind: ProviderKind) -> some View {
@@ -15,19 +15,20 @@ enum BrandIcon {
     }
 }
 
-/// OpenAI-style interlocking blossom (simplified radial petals).
+/// OpenAI interlocking hex blossom — six elliptical petals.
 private struct ChatGPTMark: View {
     var body: some View {
         GeometryReader { geo in
             let s = min(geo.size.width, geo.size.height)
             let c = CGPoint(x: geo.size.width / 2, y: geo.size.height / 2)
-            let r = s * 0.40
+            let petalLen = s * 0.46
+            let petalWid = s * 0.18
             ZStack {
                 ForEach(0..<6, id: \.self) { i in
                     Capsule(style: .continuous)
-                        .stroke(Color.white.opacity(0.95), lineWidth: max(s * 0.08, 1.0))
-                        .frame(width: r * 0.38, height: r * 0.92)
-                        .offset(y: -r * 0.28)
+                        .stroke(Color.white.opacity(0.95), lineWidth: max(s * 0.075, 0.9))
+                        .frame(width: petalWid, height: petalLen)
+                        .offset(y: -petalLen * 0.22)
                         .rotationEffect(.degrees(Double(i) * 60))
                         .position(c)
                 }
@@ -37,42 +38,36 @@ private struct ChatGPTMark: View {
     }
 }
 
-/// Cursor chevron / caret mark.
+/// Cursor upward caret (CodeNotch chevron) — single open V, no underline.
 private struct CursorMark: View {
     var body: some View {
         GeometryReader { geo in
             let s = min(geo.size.width, geo.size.height)
-            let inset = s * 0.16
+            let insetX = s * 0.14
+            let top = s * 0.18
+            let bottom = s * 0.78
             Path { path in
-                path.move(to: CGPoint(x: inset, y: geo.size.height * 0.64))
-                path.addLine(to: CGPoint(x: geo.size.width / 2, y: inset))
-                path.addLine(to: CGPoint(x: geo.size.width - inset, y: geo.size.height * 0.64))
+                path.move(to: CGPoint(x: insetX, y: bottom))
+                path.addLine(to: CGPoint(x: geo.size.width / 2, y: top))
+                path.addLine(to: CGPoint(x: geo.size.width - insetX, y: bottom))
             }
             .stroke(
                 Color.white.opacity(0.95),
-                style: StrokeStyle(lineWidth: max(s * 0.12, 1.3), lineCap: .round, lineJoin: .round)
-            )
-            Path { path in
-                path.move(to: CGPoint(x: geo.size.width * 0.34, y: geo.size.height * 0.78))
-                path.addLine(to: CGPoint(x: geo.size.width * 0.66, y: geo.size.height * 0.78))
-            }
-            .stroke(
-                Color.white.opacity(0.85),
-                style: StrokeStyle(lineWidth: max(s * 0.09, 1.1), lineCap: .round)
+                style: StrokeStyle(lineWidth: max(s * 0.14, 1.4), lineCap: .round, lineJoin: .round)
             )
         }
         .aspectRatio(1, contentMode: .fit)
     }
 }
 
-/// Gemini four-point sparkle.
+/// Gemini four-point sparkle (soft diamond star).
 private struct GeminiMark: View {
     var body: some View {
         GeometryReader { geo in
             let s = min(geo.size.width, geo.size.height)
             let c = CGPoint(x: geo.size.width / 2, y: geo.size.height / 2)
-            let outer = s * 0.46
-            let inner = s * 0.13
+            let outer = s * 0.48
+            let inner = s * 0.11
             Path { path in
                 for i in 0..<8 {
                     let angle = Double(i) * (.pi / 4) - .pi / 2

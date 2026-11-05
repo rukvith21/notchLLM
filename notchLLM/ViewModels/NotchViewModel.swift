@@ -19,6 +19,8 @@ final class NotchViewModel {
     /// Stored as nonisolated so `deinit` can clear it without MainActor hops.
     nonisolated(unsafe) private var settingsObserver: NSObjectProtocol?
     private var refreshTask: Task<Void, Never>?
+    private var hasCompletedInitialLoad = false
+    var onRefreshCycleCompleted: (() -> Void)?
 
     init(
         aggregator: UsageAggregator = UsageAggregator(),
@@ -69,25 +71,32 @@ final class NotchViewModel {
         guard !isRefreshing else { return }
         isRefreshing = true
         lastError = nil
-        defer { isRefreshing = false }
+        defer {
+            isRefreshing = false
+            onRefreshCycleCompleted?()
+        }
 
-        usages = usages.map {
-            ProviderUsage(
-                provider: $0.provider,
-                usedFraction: $0.usedFraction,
-                tokensUsed: $0.tokensUsed,
-                tokensLimit: $0.tokensLimit,
-                resetsAt: $0.resetsAt,
-                status: .loading,
-                source: $0.source,
-                authState: $0.authState,
-                detail: $0.detail
-            )
+        // Only flash loading skeletons on the first load — quiet auto-refresh keeps last rings.
+        if !hasCompletedInitialLoad {
+            usages = usages.map {
+                ProviderUsage(
+                    provider: $0.provider,
+                    usedFraction: $0.usedFraction,
+                    tokensUsed: $0.tokensUsed,
+                    tokensLimit: $0.tokensLimit,
+                    resetsAt: $0.resetsAt,
+                    status: .loading,
+                    source: $0.source,
+                    authState: $0.authState,
+                    detail: $0.detail
+                )
+            }
         }
 
         let next = await aggregator.refreshAll()
         usages = next
         lastRefreshedAt = Date()
+        hasCompletedInitialLoad = true
         if let firstError = next.first(where: {
             if case .error = $0.status { return true }
             return false
@@ -109,6 +118,20 @@ final class NotchViewModel {
         if provider != nil {
             isExpanded = true
         }
+    }
+
+    var lastRefreshedLabel: String {
+        guard let lastRefreshedAt else { return "Never refreshed" }
+        let formatter = RelativeDateTimeFormatter()
+        formatter.unitsStyle = .abbreviated
+        return "Updated \(formatter.localizedString(for: lastRefreshedAt, relativeTo: Date()))"
+    }
+
+    var autoRefreshLabel: String {
+        if autoRefreshSeconds <= 0 { return "Auto-refresh off" }
+        if autoRefreshSeconds < 60 { return "Auto-refresh \(autoRefreshSeconds)s" }
+        let minutes = autoRefreshSeconds / 60
+        return "Auto-refresh \(minutes)m"
     }
 
     // MARK: - Auto-refresh

@@ -9,7 +9,8 @@ struct NotchLLMSettings: Codable, Equatable, Sendable {
     var providers: [String: ProviderManualConfig]
 
     static let `default` = NotchLLMSettings(
-        preferMockWhenUnauthenticated: true,
+        // Off by default — unsigned-in cells show "–", not invented demo fractions.
+        preferMockWhenUnauthenticated: false,
         manualFallbackEnabled: true,
         autoRefreshSeconds: 60,
         providers: [
@@ -48,7 +49,7 @@ struct NotchLLMSettings: Codable, Equatable, Sendable {
 
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        preferMockWhenUnauthenticated = try container.decodeIfPresent(Bool.self, forKey: .preferMockWhenUnauthenticated) ?? true
+        preferMockWhenUnauthenticated = try container.decodeIfPresent(Bool.self, forKey: .preferMockWhenUnauthenticated) ?? false
         manualFallbackEnabled = try container.decodeIfPresent(Bool.self, forKey: .manualFallbackEnabled) ?? true
         autoRefreshSeconds = try container.decodeIfPresent(Int.self, forKey: .autoRefreshSeconds) ?? 60
         providers = try container.decodeIfPresent([String: ProviderManualConfig].self, forKey: .providers)

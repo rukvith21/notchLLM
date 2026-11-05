@@ -7,6 +7,10 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
     private var window: NSWindow?
     private let settingsViewModel = SettingsViewModel()
 
+    func configure(onRequestRefresh: @escaping () -> Void) {
+        settingsViewModel.onRequestRefresh = onRequestRefresh
+    }
+
     func show() {
         if window == nil {
             build()
@@ -24,7 +28,7 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
         let root = SettingsView(viewModel: settingsViewModel)
         let hosting = NSHostingController(rootView: root)
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 520, height: 600),
+            contentRect: NSRect(x: 0, y: 0, width: 520, height: 620),
             styleMask: [.titled, .closable, .miniaturizable, .resizable],
             backing: .buffered,
             defer: false

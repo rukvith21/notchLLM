@@ -19,6 +19,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         panel.show()
 
         let settings = SettingsWindowController()
+        settings.configure { [weak self] in
+            Task { await self?.viewModel.refresh() }
+        }
         settingsWindowController = settings
 
         let status = StatusItemController(
@@ -27,10 +30,24 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             },
             onRefresh: { [weak self] in
                 Task { await self?.viewModel.refresh() }
+            },
+            statusProvider: { [weak self] in
+                guard let self else {
+                    return ("Never refreshed", "Auto-refresh off", false)
+                }
+                return (
+                    self.viewModel.lastRefreshedLabel,
+                    self.viewModel.autoRefreshLabel,
+                    self.viewModel.isRefreshing
+                )
             }
         )
         statusItemController = status
         status.install()
+
+        viewModel.onRefreshCycleCompleted = { [weak status] in
+            status?.rebuildMenu()
+        }
 
         let observer = DisplayObserver { [weak panel] in
             panel?.repositionForActiveDisplay()

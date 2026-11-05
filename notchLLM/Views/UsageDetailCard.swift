@@ -8,26 +8,26 @@ struct UsageDetailCard: View {
         HStack(alignment: .center, spacing: 0) {
             HStack(alignment: .top, spacing: 8) {
                 BrandIcon.view(for: usage.provider)
-                    .frame(width: 14, height: 14)
+                    .frame(width: 13, height: 13)
                     .foregroundStyle(Color.white.opacity(0.95))
-                    .padding(.top, 2)
+                    .padding(.top, 1.5)
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(usage.provider.usageTitle)
                         .font(.system(size: 12, weight: .semibold))
-                        .foregroundStyle(Color.white.opacity(0.95))
+                        .foregroundStyle(Color.white.opacity(0.96))
                         .lineLimit(1)
 
                     Text(subtitle)
                         .font(.system(size: 11, weight: .regular))
-                        .foregroundStyle(Color.white.opacity(0.55))
+                        .foregroundStyle(Color.white.opacity(0.52))
                         .lineLimit(2)
                         .fixedSize(horizontal: false, vertical: true)
                 }
             }
             .padding(.leading, 12)
-            .padding(.trailing, 12)
-            .padding(.vertical, 10)
+            .padding(.trailing, 11)
+            .padding(.vertical, 9)
             .background(
                 RoundedRectangle(cornerRadius: 10, style: .continuous)
                     .fill(Color.black)
@@ -36,11 +36,11 @@ struct UsageDetailCard: View {
             // Overlap 1pt so the tail reads as one shape with the card (no hairline gap).
             TooltipPointer()
                 .fill(Color.black)
-                .frame(width: 7, height: 12)
+                .frame(width: 7, height: 11)
                 .padding(.leading, -1)
         }
         .compositingGroup()
-        .shadow(color: Color.black.opacity(0.55), radius: 10, x: -2, y: 3)
+        .shadow(color: Color.black.opacity(0.50), radius: 9, x: -2, y: 2)
         .fixedSize()
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(usage.provider.usageTitle). \(subtitle)")

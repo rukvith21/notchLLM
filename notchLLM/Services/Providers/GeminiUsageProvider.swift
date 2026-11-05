@@ -106,7 +106,8 @@ struct GeminiUsageProvider: UsageProviding {
         let endpoints = [
             "https://cloudcode-pa.googleapis.com/v1internal:retrieveUserQuotaSummary",
             "https://daily-cloudcode-pa.googleapis.com/v1internal:retrieveUserQuotaSummary",
-            "https://cloudcode-pa.googleapis.com/v1internal:retrieveUserQuota"
+            "https://cloudcode-pa.googleapis.com/v1internal:retrieveUserQuota",
+            "https://daily-cloudcode-pa.googleapis.com/v1internal:retrieveUserQuota"
         ]
 
         for candidate in endpoints {
@@ -150,12 +151,22 @@ struct GeminiUsageProvider: UsageProviding {
         if let buckets = json["buckets"] as? [[String: Any]] {
             for bucket in buckets {
                 // Prefer Gemini model buckets when present.
-                let model = (bucket["modelId"] as? String)?.lowercased() ?? ""
+                let model = ((bucket["modelId"] as? String) ?? (bucket["model"] as? String))?.lowercased() ?? ""
                 let isGemini = model.contains("gemini") || model.isEmpty
-                if let remaining = number(bucket["remainingFraction"]), isGemini || remainingSamples.isEmpty {
-                    remainingSamples.append((remaining, isoDate(bucket["resetTime"])))
+                if let remaining = number(bucket["remainingFraction"]) ?? number(bucket["remaining_fraction"]),
+                   isGemini || remainingSamples.isEmpty {
+                    remainingSamples.append((remaining, isoDate(bucket["resetTime"]) ?? isoDate(bucket["reset_time"])))
+                } else if let used = number(bucket["usedFraction"]) ?? number(bucket["used_fraction"]),
+                          isGemini || remainingSamples.isEmpty {
+                    remainingSamples.append((max(0, 1 - used), isoDate(bucket["resetTime"])))
                 }
             }
+        }
+
+        // Top-level remainingFraction fallback.
+        if remainingSamples.isEmpty,
+           let remaining = number(json["remainingFraction"]) ?? number(json["remaining_fraction"]) {
+            remainingSamples.append((remaining, isoDate(json["resetTime"]) ?? isoDate(json["reset_time"])))
         }
 
         guard let tightest = remainingSamples.min(by: { $0.fraction < $1.fraction }) else {

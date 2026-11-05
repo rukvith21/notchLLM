@@ -102,9 +102,11 @@ struct ChatGPTUsageProvider: UsageProviding {
     ) async -> ProviderUsage? {
         let candidates = [
             "https://chatgpt.com/backend-api/wham/usage",
-            "https://chatgpt.com/backend-api/wham/usage?cedar_ember=1"
+            "https://chatgpt.com/backend-api/wham/usage?cedar_ember=1",
+            "https://chatgpt.com/backend-api/wham/usage?include_extra_usage=true"
         ]
-        var headers = [
+        var headerVariants: [[String: String]] = []
+        var base = [
             "Authorization": "Bearer \(token)",
             "Accept": "application/json",
             "User-Agent": "codex-cli",
@@ -112,29 +114,45 @@ struct ChatGPTUsageProvider: UsageProviding {
             "Referer": "https://chatgpt.com/"
         ]
         if let accountID, !accountID.isEmpty {
-            headers["ChatGPT-Account-ID"] = accountID
+            base["ChatGPT-Account-ID"] = accountID
+            headerVariants.append(base)
+            var alt = base
+            alt["chatgpt-account-id"] = accountID
+            headerVariants.append(alt)
+        } else {
+            headerVariants.append(base)
         }
 
         for candidate in candidates {
             guard let url = URL(string: candidate) else { continue }
-            do {
-                let (data, response) = try await http.getJSON(url: url, headers: headers)
-                guard (200..<300).contains(response.statusCode),
-                      let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
-                      let parsed = parseWhamJSON(json, manual: manual)
-                else { continue }
-                return parsed
-            } catch {
-                continue
+            for headers in headerVariants {
+                do {
+                    let (data, response) = try await http.getJSON(url: url, headers: headers)
+                    guard (200..<300).contains(response.statusCode),
+                          let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
+                          let parsed = parseWhamJSON(json, manual: manual)
+                    else { continue }
+                    return parsed
+                } catch {
+                    continue
+                }
             }
         }
         return nil
     }
 
     private func parseWhamJSON(_ json: [String: Any], manual: ProviderManualConfig) -> ProviderUsage? {
-        let plan = (json["plan_type"] as? String) ?? manual.tier
-        let rate = json["rate_limit"] as? [String: Any]
-        let windows = [rate?["primary_window"], rate?["secondary_window"]]
+        let plan = (json["plan_type"] as? String)
+            ?? (json["planType"] as? String)
+            ?? manual.tier
+        let rate = (json["rate_limit"] as? [String: Any])
+            ?? (json["rateLimit"] as? [String: Any])
+            ?? (json["usage"] as? [String: Any])
+        let windows = [
+            rate?["primary_window"], rate?["secondary_window"],
+            rate?["primaryWindow"], rate?["secondaryWindow"],
+            json["primary_window"], json["secondary_window"]
+        ]
             .compactMap { $0 as? [String: Any] }
 
         // Prefer the most constrained window (highest used_percent).
@@ -142,24 +160,27 @@ struct ChatGPTUsageProvider: UsageProviding {
         var bestReset: Date?
         var bestWindowSeconds: Int?
         for window in windows {
-            let used: Double?
-            if let number = window["used_percent"] as? NSNumber {
-                used = number.doubleValue
-            } else if let text = window["used_percent"] as? String {
-                used = Double(text)
-            } else {
-                used = nil
-            }
+            let used = number(window["used_percent"])
+                ?? number(window["usedPercent"])
+                ?? number(window["percent_used"])
             guard let used else { continue }
             if bestUsedPercent == nil || used > (bestUsedPercent ?? -1) {
                 bestUsedPercent = used
                 bestWindowSeconds = (window["limit_window_seconds"] as? NSNumber)?.intValue
-                if let resetAt = window["reset_at"] as? NSNumber {
+                    ?? (window["limitWindowSeconds"] as? NSNumber)?.intValue
+                if let resetAt = window["reset_at"] as? NSNumber
+                    ?? window["resetAt"] as? NSNumber {
                     bestReset = Date(timeIntervalSince1970: resetAt.doubleValue)
-                } else if let after = window["reset_after_seconds"] as? NSNumber {
+                } else if let after = window["reset_after_seconds"] as? NSNumber
+                    ?? window["resetAfterSeconds"] as? NSNumber {
                     bestReset = Date().addingTimeInterval(after.doubleValue)
                 }
             }
+        }
+
+        // Some payloads expose a single top-level used_percent.
+        if bestUsedPercent == nil {
+            bestUsedPercent = number(json["used_percent"]) ?? number(json["usedPercent"])
         }
 
         guard let usedPercent = bestUsedPercent else { return nil }
@@ -186,6 +207,12 @@ struct ChatGPTUsageProvider: UsageProviding {
             authState: .authenticated,
             detail: "ChatGPT \(plan) · live \(windowLabel) · \(Int((1 - usedFraction) * 100))% left"
         )
+    }
+
+    private func number(_ value: Any?) -> Double? {
+        if let number = value as? NSNumber { return number.doubleValue }
+        if let text = value as? String { return Double(text) }
+        return nil
     }
 
     private func compose(

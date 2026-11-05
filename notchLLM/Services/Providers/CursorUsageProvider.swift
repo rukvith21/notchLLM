@@ -116,7 +116,40 @@ struct CursorUsageProvider: UsageProviding {
         if let summary = await fetchUsageSummary(token: token, manual: manual, session: session) {
             return summary
         }
+        if let stripe = await fetchStripeProfile(token: token, manual: manual, session: session) {
+            return stripe
+        }
         return await fetchLegacyBearerUsage(token: token, manual: manual, session: session)
+    }
+
+    private func fetchStripeProfile(
+        token: String,
+        manual: ProviderManualConfig,
+        session: CursorSessionDetector.Snapshot
+    ) async -> ProviderUsage? {
+        let urls = [
+            "https://api2.cursor.sh/auth/full_stripe_profile",
+            "https://api2.cursor.sh/auth/usage"
+        ]
+        let headers = [
+            "Authorization": "Bearer \(token)",
+            "Accept": "application/json",
+            "User-Agent": "Mozilla/5.0"
+        ]
+        for candidate in urls {
+            guard let url = URL(string: candidate) else { continue }
+            do {
+                let (data, response) = try await http.getJSON(url: url, headers: headers)
+                guard (200..<300).contains(response.statusCode),
+                      let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
+                      let parsed = parseUsageJSON(json, manual: manual, session: session)
+                else { continue }
+                return parsed
+            } catch {
+                continue
+            }
+        }
+        return nil
     }
 
     private func fetchDashboardPeriodUsage(
@@ -192,23 +225,40 @@ struct CursorUsageProvider: UsageProviding {
         let candidates = [
             "https://cursor.com/api/usage",
             "https://www.cursor.com/api/usage",
-            "https://api2.cursor.sh/auth/usage"
+            "https://api2.cursor.sh/auth/usage",
+            "https://api2.cursor.sh/aiserver.v1.DashboardService/GetCurrentPeriodUsage"
         ]
-        let headers = [
-            "Authorization": "Bearer \(token)",
-            "Accept": "application/json"
+        let headerSets: [[String: String]] = [
+            ["Authorization": "Bearer \(token)", "Accept": "application/json"],
+            [
+                "Authorization": "Bearer \(token)",
+                "Accept": "application/json",
+                "Content-Type": "application/json",
+                "Connect-Protocol-Version": "1"
+            ]
         ]
         for candidate in candidates {
             guard let url = URL(string: candidate) else { continue }
-            do {
-                let (data, response) = try await http.getJSON(url: url, headers: headers)
-                guard (200..<300).contains(response.statusCode),
-                      let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
-                      let parsed = parseUsageJSON(json, manual: manual, session: session)
-                else { continue }
-                return parsed
-            } catch {
-                continue
+            for headers in headerSets {
+                do {
+                    let (data, response): (Data, HTTPURLResponse)
+                    if candidate.contains("DashboardService") {
+                        (data, response) = try await http.postJSON(
+                            url: url,
+                            headers: headers,
+                            body: Data("{}".utf8)
+                        )
+                    } else {
+                        (data, response) = try await http.getJSON(url: url, headers: headers)
+                    }
+                    guard (200..<300).contains(response.statusCode),
+                          let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
+                          let parsed = parseUsageJSON(json, manual: manual, session: session)
+                    else { continue }
+                    return parsed
+                } catch {
+                    continue
+                }
             }
         }
         return nil

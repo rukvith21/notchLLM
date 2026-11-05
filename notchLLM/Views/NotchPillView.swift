@@ -5,16 +5,17 @@ struct NotchPillView: View {
     @Bindable var viewModel: NotchViewModel
     var onContentSizeChange: ((CGSize) -> Void)?
 
-    /// Slim bar width hugging the screen edge (CodeNotch target ~44–48pt).
-    private let barWidth: CGFloat = 44
-    private let cellHeight: CGFloat = 46
-    private let barVerticalPadding: CGFloat = 7
-    private let tooltipGap: CGFloat = 6
-    private let tooltipColumnWidth: CGFloat = 228
+    /// Slim bar width hugging the screen edge (CodeNotch target ~40–44pt).
+    private let barWidth: CGFloat = 42
+    private let cellHeight: CGFloat = 48
+    private let barVerticalPadding: CGFloat = 8
+    private let cellSpacing: CGFloat = 2
+    private let tooltipGap: CGFloat = 5
+    private let tooltipColumnWidth: CGFloat = 232
     /// Extra panel padding so soft shadows / tails are not clipped by the NSPanel.
-    private let shadowBleedLeading: CGFloat = 14
-    private let shadowBleedTrailing: CGFloat = 4
-    private let shadowBleedVertical: CGFloat = 12
+    private let shadowBleedLeading: CGFloat = 12
+    private let shadowBleedTrailing: CGFloat = 2
+    private let shadowBleedVertical: CGFloat = 10
 
     @State private var tooltipHeight: CGFloat = 42
 
@@ -59,17 +60,10 @@ struct NotchPillView: View {
     // MARK: - Columns
 
     private var barColumn: some View {
-        VStack(spacing: 0) {
-            ForEach(Array(viewModel.usages.enumerated()), id: \.element.id) { index, usage in
+        VStack(spacing: cellSpacing) {
+            ForEach(viewModel.usages) { usage in
                 cellButton(for: usage)
                     .frame(height: cellHeight)
-
-                if index < viewModel.usages.count - 1 {
-                    Capsule()
-                        .fill(Color.white.opacity(0.20))
-                        .frame(width: 11, height: 1)
-                        .frame(maxWidth: .infinity)
-                }
             }
         }
         .padding(.vertical, barVerticalPadding)
@@ -79,11 +73,11 @@ struct NotchPillView: View {
                 .fill(Color.black)
                 .overlay {
                     Capsule(style: .continuous)
-                        .strokeBorder(Color.white.opacity(0.08), lineWidth: 0.5)
+                        .strokeBorder(Color.white.opacity(0.06), lineWidth: 0.5)
                 }
         }
         .compositingGroup()
-        .shadow(color: Color.black.opacity(0.45), radius: 9, x: -2, y: 3)
+        .shadow(color: Color.black.opacity(0.40), radius: 8, x: -1, y: 2)
         .onHover { hovering in
             viewModel.setExpanded(hovering)
             if hovering, viewModel.focusedProvider == nil {
@@ -125,7 +119,7 @@ struct NotchPillView: View {
                 usage: usage,
                 isFocused: viewModel.focusedProvider == usage.provider,
                 showsPercent: true,
-                iconSize: 24
+                iconSize: 26
             )
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .contentShape(Rectangle())
@@ -141,8 +135,8 @@ struct NotchPillView: View {
     // MARK: - Layout math
 
     private var barHeight: CGFloat {
-        let separators = CGFloat(max(viewModel.usages.count - 1, 0)) * 1
-        return CGFloat(viewModel.usages.count) * cellHeight + separators + barVerticalPadding * 2
+        let gaps = CGFloat(max(viewModel.usages.count - 1, 0)) * cellSpacing
+        return CGFloat(viewModel.usages.count) * cellHeight + gaps + barVerticalPadding * 2
     }
 
     private var contentWidth: CGFloat {
@@ -170,8 +164,8 @@ struct NotchPillView: View {
         guard let index = viewModel.usages.firstIndex(where: { $0.provider == provider }) else {
             return 0
         }
-        let separatorOffset = CGFloat(index) * 1
-        let cellCenter = barVerticalPadding + CGFloat(index) * cellHeight + separatorOffset + cellHeight / 2
+        let gapOffset = CGFloat(index) * cellSpacing
+        let cellCenter = barVerticalPadding + CGFloat(index) * cellHeight + gapOffset + cellHeight / 2
         let raw = cellCenter - tooltipHeight / 2
         let maxOffset = max(barHeight - tooltipHeight, 0)
         return min(max(raw, 0), maxOffset)

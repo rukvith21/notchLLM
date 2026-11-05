@@ -5,7 +5,7 @@ import Observation
 @MainActor
 @Observable
 final class SettingsViewModel {
-    var preferMockWhenUnauthenticated = true
+    var preferMockWhenUnauthenticated = false
     var manualFallbackEnabled = true
     /// 0 = off; otherwise refresh every N seconds.
     var autoRefreshSeconds = 60
@@ -37,14 +37,17 @@ final class SettingsViewModel {
 
     static let autoRefreshChoices: [(label: String, seconds: Int)] = [
         ("Off", 0),
+        ("15 seconds", 15),
         ("30 seconds", 30),
         ("1 minute", 60),
         ("2 minutes", 120),
-        ("5 minutes", 300)
+        ("5 minutes", 300),
+        ("10 minutes", 600)
     ]
 
     private let settingsStore: any SettingsStoring
     private let credentials: CredentialStore
+    var onRequestRefresh: (() -> Void)?
 
     init(
         settingsStore: any SettingsStoring = FileSettingsStore.shared,
@@ -152,6 +155,27 @@ final class SettingsViewModel {
         } catch {
             statusMessage = "Save failed: \(error.localizedDescription)"
         }
+    }
+
+    /// Persist auto-refresh immediately when the picker changes (no full Save required).
+    func persistAutoRefreshOnly() async {
+        var settings = await settingsStore.load()
+        let next = max(autoRefreshSeconds, 0)
+        guard settings.autoRefreshSeconds != next else { return }
+        settings.autoRefreshSeconds = next
+        do {
+            try await settingsStore.save(settings)
+            let label = next == 0 ? "off" : "\(next)s"
+            statusMessage = "Auto-refresh set to \(label)"
+            NotificationCenter.default.post(name: .notchLLMSettingsDidChange, object: nil)
+        } catch {
+            statusMessage = "Could not save auto-refresh: \(error.localizedDescription)"
+        }
+    }
+
+    func requestRefreshNow() {
+        statusMessage = "Refreshing live adapters…"
+        onRequestRefresh?()
     }
 
     func clearKey(for kind: ProviderKind) async {
